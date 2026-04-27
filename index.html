@@ -6,10 +6,12 @@
 <title>Scripting Training Tracker · Ipsos Bulgaria</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script>
-window.FORM_DATA  = null;              // replaced on "Save & Share"
-window.GIST_TOKEN = "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";              // paste your GitHub token here
-window.GIST_ID    = "0ff26bff55c4bdde42196f6c54a3e236";              // paste your Gist ID here
-window.GIST_FILE  = 'training-tracker.json';
+window.FORM_DATA  = null;              // replaced on backup
+// Gist sync credentials are stored in localStorage per device (never in this file).
+// Editors can configure them via the "🔧 Sync setup" button after unlocking editor mode.
+window.GIST_TOKEN = (() => { try { return localStorage.getItem('tt3_gist_token'); } catch(e){ return null; } })();
+window.GIST_ID    = (() => { try { return localStorage.getItem('tt3_gist_id'); } catch(e){ return null; } })();
+window.GIST_FILE  = (() => { try { return localStorage.getItem('tt3_gist_file') || 'training-tracker.json'; } catch(e){ return 'training-tracker.json'; } })();
 </script>
 <style>
 :root {
@@ -478,6 +480,7 @@ body.readonly .btn-archive,
 body.readonly .btn-restore,
 body.readonly .note-btn { opacity:.45; cursor:not-allowed; }
 body.readonly .arch-card { cursor:pointer; } /* viewing archive cards still allowed */
+body.readonly .editor-only { display:none !important; }
 
 /* Toast */
 .toast-host {
@@ -640,6 +643,7 @@ body.readonly .arch-card { cursor:pointer; } /* viewing archive cards still allo
       <span class="lock-icon">🔒</span>
       <span id="lock-pill-txt">Read only</span>
     </button>
+    <button class="btn btn-ghost editor-only" id="sync-btn" onclick="setupGistCredentials()" title="Configure GitHub Gist sync (per device)">🔧 Sync</button>
     <button class="btn btn-ghost" onclick="saveHTML()" title="Download an offline backup copy of this tool with all data embedded">⬇ Backup</button>
   </div>
 </header>
@@ -1465,6 +1469,15 @@ function promptEditUnlock() {
         applyEditLockUI();
         finish(true);
         toast('Editor mode unlocked', 'ok');
+        // First-time editor on this device — prompt for sync setup
+        if (!gistReady()) {
+          setTimeout(() => {
+            confirmModal(
+              'You are editing locally. To sync changes with the team shared Gist, configure your GitHub token now (one-time per device).',
+              { title:'Configure sync?', confirmLabel:'Set up sync', confirmClass:'btn-navy', cancelLabel:'Skip for now' }
+            ).then(ok => { if (ok) setupGistCredentials(); });
+          }, 800);
+        }
       } else {
         busy = false;
         errEl.textContent = 'Incorrect password';
@@ -1835,6 +1848,169 @@ async function archiveTrainee(id) {
 ══════════════════════════════════════════════════════ */
 
 function gistReady() { return !!(window.GIST_TOKEN && window.GIST_ID); }
+
+/* Setup Gist credentials — stored in localStorage per device.
+   Token is never embedded in the HTML file (avoids GitHub auto-revoke). */
+function setupGistCredentials() {
+  return new Promise((resolve) => {
+    const host = document.getElementById('modal-host');
+    let resolved = false;
+    const cleanup = () => {
+      host.innerHTML = '';
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', onKey);
+    };
+    const finish = (val) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve(val);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') finish(false); };
+
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+
+    const curToken = window.GIST_TOKEN || '';
+    const curId    = window.GIST_ID || '';
+    const curFile  = window.GIST_FILE || 'training-tracker.json';
+    const tokenMasked = curToken ? curToken.substring(0,7) + '…' + curToken.substring(curToken.length-4) : '';
+
+    host.innerHTML = `
+      <div class="mdl-back" id="mdl-back">
+        <div class="mdl-card mdl-large" role="dialog" aria-modal="true" onclick="event.stopPropagation()" style="max-width:620px">
+          <div class="mdl-hd">
+            <div>
+              <div class="mdl-sub">Per-device · Stored locally</div>
+              <div class="mdl-title">Configure <em>Gist sync</em></div>
+            </div>
+            <button class="mdl-x" id="mdl-x" aria-label="Close">✕</button>
+          </div>
+          <div class="mdl-bd">
+            <p style="margin-bottom:14px">Enter your GitHub Gist credentials. They are stored only in this browser, never uploaded.</p>
+            ${curToken ? `<p style="font-size:12px;color:var(--muted);margin-bottom:14px">Currently configured: <strong>${tokenMasked}</strong> · Gist <strong>${curId.substring(0,8)}…</strong></p>` : ''}
+
+            <div style="margin-bottom:14px">
+              <label style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">GitHub Personal Access Token</label>
+              <div class="pwd-row">
+                <input type="password" id="cfg-token" class="mdl-pwd-input" placeholder="ghp_..." autocomplete="off" spellcheck="false">
+                <button type="button" class="pwd-eye" onclick="togglePwdEye('cfg-token', this)" title="Show"><span>👁</span></button>
+              </div>
+              <div style="font-size:11px;color:var(--muted2);margin-top:4px">Classic token with <strong>gist</strong> scope. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Training%20Tracker" target="_blank" style="color:var(--teal-deep)">Generate one →</a></div>
+            </div>
+
+            <div style="margin-bottom:14px">
+              <label style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Gist ID</label>
+              <input type="text" id="cfg-id" class="mdl-pwd-input" placeholder="0ff26bff55c4bdde42196f6c54a3e236" value="${curId}" autocomplete="off" spellcheck="false">
+              <div style="font-size:11px;color:var(--muted2);margin-top:4px">The hex string from the gist URL: gist.github.com/user/<strong>{this part}</strong></div>
+            </div>
+
+            <div style="margin-bottom:14px">
+              <label style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Filename inside Gist</label>
+              <input type="text" id="cfg-file" class="mdl-pwd-input" placeholder="training-tracker.json" value="${curFile}" autocomplete="off" spellcheck="false">
+            </div>
+
+            <div class="mdl-pwd-err" id="cfg-err"></div>
+            <div id="cfg-status" style="font-size:12px;font-weight:700;color:var(--teal-deep);min-height:18px"></div>
+          </div>
+          <div class="mdl-ft">
+            ${curToken ? `<button class="btn btn-danger" id="btn-clear">Disconnect</button>` : ''}
+            <div style="flex:1"></div>
+            <button class="btn btn-ghost-dark" id="btn-cancel">Cancel</button>
+            <button class="btn btn-navy" id="btn-test">Test &amp; Save</button>
+          </div>
+        </div>
+      </div>`;
+
+    const tokenIn = document.getElementById('cfg-token');
+    const idIn    = document.getElementById('cfg-id');
+    const fileIn  = document.getElementById('cfg-file');
+    const errEl   = document.getElementById('cfg-err');
+    const statusEl = document.getElementById('cfg-status');
+    const btnTest = document.getElementById('btn-test');
+
+    let busy = false;
+    btnTest.addEventListener('click', async () => {
+      if (busy) return;
+      const tok  = tokenIn.value.trim();
+      const gid  = idIn.value.trim();
+      const file = fileIn.value.trim() || 'training-tracker.json';
+      errEl.textContent = '';
+      if (!tok)  { errEl.textContent = 'Token is required'; tokenIn.focus(); return; }
+      if (!gid)  { errEl.textContent = 'Gist ID is required'; idIn.focus(); return; }
+      busy = true;
+      btnTest.textContent = 'Testing…';
+      statusEl.textContent = 'Pinging GitHub…';
+      try {
+        const r = await fetch(`https://api.github.com/gists/${gid}`, {
+          headers: {
+            'Authorization': 'Bearer ' + tok,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+          }
+        });
+        if (!r.ok) {
+          const e = await r.json().catch(() => ({}));
+          throw new Error(`HTTP ${r.status}: ${e.message || 'unknown error'}`);
+        }
+        const data = await r.json();
+        const files = Object.keys(data.files || {});
+        if (!files.includes(file)) {
+          if (files.length === 0) {
+            throw new Error('Gist exists but contains no files. Add an empty {} file in your gist first.');
+          }
+          throw new Error(`File "${file}" not found in gist. Available: ${files.join(', ')}`);
+        }
+        try {
+          localStorage.setItem('tt3_gist_token', tok);
+          localStorage.setItem('tt3_gist_id', gid);
+          localStorage.setItem('tt3_gist_file', file);
+        } catch(e) {}
+        window.GIST_TOKEN = tok;
+        window.GIST_ID    = gid;
+        window.GIST_FILE  = file;
+        statusEl.textContent = '✓ Connected. Loading data…';
+        setTimeout(() => { finish(true); pullGist(); }, 600);
+      } catch (e) {
+        errEl.textContent = e.message;
+        statusEl.textContent = '';
+        busy = false;
+        btnTest.textContent = 'Test & Save';
+      }
+    });
+
+    const clearBtn = document.getElementById('btn-clear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', async () => {
+        cleanup(); resolved = true;
+        const ok = await confirmModal(
+          'Disconnect this device from Gist sync? Your local data will remain, but new changes will not sync to other devices until you reconnect.',
+          { title:'Disconnect sync?', confirmLabel:'Disconnect', confirmClass:'btn-danger' }
+        );
+        if (!ok) { setupGistCredentials(); return; }
+        try {
+          localStorage.removeItem('tt3_gist_token');
+          localStorage.removeItem('tt3_gist_id');
+          localStorage.removeItem('tt3_gist_file');
+        } catch(e) {}
+        window.GIST_TOKEN = null;
+        window.GIST_ID    = null;
+        setIndicator('local', 'Local only');
+        resolve('disconnect');
+      });
+    }
+
+    document.getElementById('btn-cancel').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-x').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-back').addEventListener('click', (e) => {
+      if (e.target.id === 'mdl-back') finish(false);
+    });
+
+    document.addEventListener('keydown', onKey);
+    setTimeout(() => tokenIn.focus(), 30);
+  });
+}
 
 function setIndicator(state, msg) {
   // state: 'ok' | 'busy' | 'err' | 'local'
