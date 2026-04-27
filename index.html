@@ -7,9 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script>
 window.FORM_DATA  = null;              // replaced on "Save & Share"
-window.GIST_TOKEN = "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";              // paste your GitHub token here
-window.GIST_ID    = "0ff26bff55c4bdde42196f6c54a3e236";              // paste your Gist ID here
-window.GIST_FILE  = 'training-tracker.json';
+window.GIST_TOKEN = null;              // paste your GitHub token here
+window.GIST_ID    = null;              // paste your Gist ID here
+window.GIST_FILE  = 'training_tracker.json';
 </script>
 <style>
 :root {
@@ -1851,14 +1851,22 @@ async function pushGist() {
   try {
     const res = await fetch(`https://api.github.com/gists/${window.GIST_ID}`, {
       method: 'PATCH',
-      headers: { Authorization: `token ${window.GIST_TOKEN}`, 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `Bearer ${window.GIST_TOKEN}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ files: { [window.GIST_FILE]: { content: JSON.stringify(S, null, 2) } } })
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`HTTP ${res.status} — ${errBody.substring(0,200)}`);
+    }
     setIndicator('ok', 'Synced ✓ ' + new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'}));
   } catch(e) {
     setIndicator('err', 'Sync failed ✕');
-    console.error('Gist push error:', e);
+    console.error('Gist push error:', e.message);
   }
 }
 
@@ -1867,12 +1875,23 @@ async function pullGist() {
   setIndicator('busy', 'Loading…');
   try {
     const res = await fetch(`https://api.github.com/gists/${window.GIST_ID}`, {
-      headers: { Authorization: `token ${window.GIST_TOKEN}` }
+      headers: {
+        'Authorization': `Bearer ${window.GIST_TOKEN}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`HTTP ${res.status} — ${errBody.substring(0,200)}`);
+    }
     const data = await res.json();
     const file = data.files[window.GIST_FILE];
-    if (!file || !file.content || file.content.trim() === '{}' || file.content.trim() === '') {
+    if (!file) {
+      const available = Object.keys(data.files || {}).join(', ');
+      throw new Error(`File "${window.GIST_FILE}" not found in Gist. Available files: ${available || '(none)'}`);
+    }
+    if (!file.content || file.content.trim() === '{}' || file.content.trim() === '') {
       setIndicator('ok', 'Gist empty — starting fresh');
       return;
     }
@@ -1880,13 +1899,14 @@ async function pullGist() {
     S = loaded;
     S.trainees.forEach(t => { WD.forEach(def => { if(!t.weeks[def.id]) t.weeks[def.id]=emptyWeeks()[def.id]; }); });
     if (!S.activeId && S.trainees.length) S.activeId = S.trainees[0].id;
-    if (!S.activeWeek) S.activeWeek = 'w0';
+    if (!S.activeWeek) S.activeWeek = 'w1';
     try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
     setIndicator('ok', 'Loaded ✓ ' + new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'}));
     renderAll();
   } catch(e) {
     setIndicator('err', 'Load failed ✕');
-    console.error('Gist pull error:', e);
+    console.error('Gist pull error:', e.message);
+    console.error('Full error:', e);
   }
 }
 
