@@ -326,6 +326,34 @@ body.modal-open .trainee-bar-outer { visibility:hidden; }
 .test-input::-webkit-inner-spin-button { display:none; }
 .test-wrap::after { content:'%'; position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:800; color:var(--muted); pointer-events:none; }
 
+/* Weekly end-of-week test card */
+.weekly-test-card {
+  display:flex; align-items:center; justify-content:space-between; gap:18px;
+  background:linear-gradient(135deg, rgba(0,196,208,.08), rgba(25,33,102,.04));
+  border:1px solid var(--border); border-radius:var(--r);
+  padding:14px 20px; margin-bottom:14px;
+}
+.wt-left { display:flex; align-items:center; gap:14px; }
+.wt-icon {
+  width:42px; height:42px; border-radius:11px;
+  background:var(--surface); box-shadow:0 2px 10px rgba(25,33,102,.08);
+  display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+}
+.wt-lbl { font-family:'Nunito',sans-serif; font-size:14px; font-weight:800; color:var(--navy); margin-bottom:2px; }
+.wt-meta { font-size:11px; font-weight:600; color:var(--muted); }
+.wt-right { display:flex; align-items:baseline; gap:4px; flex-shrink:0; }
+.wt-input {
+  width:88px; padding:9px 12px;
+  border:1.5px solid var(--border-m); border-radius:var(--r-sm);
+  background:var(--surface);
+  font-family:'Nunito',sans-serif; font-size:18px; font-weight:900; color:var(--navy);
+  text-align:center; transition:all .18s;
+}
+.wt-input:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-tint); }
+.wt-input::-webkit-inner-spin-button { display:none; }
+.wt-pct { font-family:'Nunito',sans-serif; font-size:18px; font-weight:800; color:var(--muted); }
+body.readonly .wt-input { background:var(--bg2); color:var(--muted); cursor:not-allowed; }
+
 .note-btn { background:none; border:none; cursor:pointer; font-family:'Nunito',sans-serif; font-size:11px; font-weight:700; color:var(--muted2); display:flex; align-items:center; gap:4px; transition:color .18s; white-space:nowrap; }
 .note-btn:hover { color:var(--teal-deep); }
 .note-wrap { display:none; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); }
@@ -596,6 +624,14 @@ body.readonly .editor-only { display:none !important; }
 .rw-table td.left { text-align:left; font-weight:700; color:var(--navy); }
 .rw-pill { display:inline-block; padding:3px 8px; border-radius:14px; font-size:11px; font-weight:700; }
 .rw-test { font-weight:800; font-size:12px; }
+.rw-test-row {
+  display:flex; align-items:center; gap:10px;
+  margin-top:10px; padding:10px 14px;
+  background:linear-gradient(135deg, rgba(0,196,208,.08), rgba(25,33,102,.04));
+  border:1px solid var(--border); border-radius:var(--r-sm);
+}
+.rw-test-lbl { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+.rw-test-val { font-family:'Nunito',sans-serif; font-size:18px; font-weight:900; }
 .rw-empty-cell { color:var(--muted2); font-style:italic; }
 .rw-notes { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
 .rw-note { margin-top:8px; }
@@ -738,13 +774,13 @@ const WD = [
    critLbls:['Punctuality','Technical Knowledge','Behavior','Participation'],test:true},
   {id:'w2',lbl:'Week 2',phase:'training',staffLbl:'Trainer',
    crit:['punctuality','technical_knowledge','behavior','participation'],
-   critLbls:['Punctuality','Technical Knowledge','Behavior','Participation'],test:true},
+   critLbls:['Punctuality','Technical Knowledge','Behavior','Participation'],test:false},
   {id:'w3',lbl:'Week 3',phase:'training',staffLbl:'Trainer',
    crit:['punctuality','technical_knowledge','behavior','participation'],
-   critLbls:['Punctuality','Technical Knowledge','Behavior','Participation'],test:true},
+   critLbls:['Punctuality','Technical Knowledge','Behavior','Participation'],test:false},
   {id:'w4',lbl:'Week 4',phase:'training',staffLbl:'Trainer',
    crit:['punctuality','technical_knowledge','behavior','participation'],
-   critLbls:['Punctuality','Technical Knowledge','Behavior','Participation'],test:true},
+   critLbls:['Punctuality','Technical Knowledge','Behavior','Participation'],test:false},
   {id:'w5',lbl:'Week 5',phase:'mentoring',staffLbl:'Mentor',
    crit:['language_proficiency','engagement','technical_knowledge','productivity','behavior'],
    critLbls:['Language Proficiency','Engagement','Technical Knowledge','Productivity','Behavior'],test:false},
@@ -771,11 +807,11 @@ function emptyWeeks() {
       days: Array.from({length:5}, () => {
         const d = {note:''};
         def.crit.forEach(c => d[c]='');
-        if (def.test) d.test='';
         return d;
       }),
       weeklyComment:'', tlComment:''
     };
+    if (def.test) w[def.id].test = '';
   });
   return w;
 }
@@ -845,6 +881,29 @@ if (!S.archived) S.archived = DEFAULT_ARCHIVED;
 // Drop legacy onboarding (w0) data — it's no longer part of the tool
 S.trainees.forEach(t => { if (t.weeks && t.weeks.w0) delete t.weeks.w0; });
 S.archived.forEach(t => { if (t.weeks && t.weeks.w0) delete t.weeks.w0; });
+
+// Migration: per-day test → week-level test (only w1 keeps a test now)
+function migrateTests(t) {
+  if (!t.weeks) return;
+  WD.forEach(def => {
+    const wd = t.weeks[def.id];
+    if (!wd) return;
+    if (def.test) {
+      // w1 — promote first non-empty per-day test to week-level if not already set
+      if (wd.test === undefined || wd.test === null) {
+        const found = (wd.days||[]).map(d => d.test).find(v => v !== '' && v != null);
+        wd.test = found || '';
+      }
+    } else {
+      // w2..w8 — strip any leftover week-level test
+      if ('test' in wd) delete wd.test;
+    }
+    // strip per-day test from every week (no longer used anywhere)
+    (wd.days||[]).forEach(d => { if ('test' in d) delete d.test; });
+  });
+}
+S.trainees.forEach(migrateTests);
+S.archived.forEach(migrateTests);
 S.trainees.forEach(t => { WD.forEach(def => { if (!t.weeks[def.id]) t.weeks[def.id] = emptyWeeks()[def.id]; }); });
 
 function active() { return S.trainees.find(t => t.id === S.activeId) || S.trainees[0]; }
@@ -858,11 +917,11 @@ function weekAvg(t, wid) {
   let sum=0, n=0;
   wd.days.forEach(d => {
     def.crit.forEach(c => { if (d[c] && SCORE[d[c]]!==undefined) { sum+=SCORE[d[c]]; n++; } });
-    if (def.test && d.test!==''&&d.test!=null) {
-      const v = parseFloat(d.test);
-      if (!isNaN(v)) { sum+=v; n++; }
-    }
   });
+  if (def.test && wd.test !== '' && wd.test != null) {
+    const v = parseFloat(wd.test);
+    if (!isNaN(v)) { sum+=v; n++; }
+  }
   return n>0 ? sum/n : null;
 }
 function phaseAvg(t, phase) {
@@ -880,7 +939,7 @@ function testCls(v) { const p=parseFloat(v); if(isNaN(p))return''; if(p>=95)retu
 /* ══════════════════════════════════════════════════════
    BUILD WEEK PANEL HTML
 ══════════════════════════════════════════════════════ */
-function gc(def) { return `110px repeat(${def.crit.length},1fr)${def.test?' 72px':''} 72px`; }
+function gc(def) { return `110px repeat(${def.crit.length},1fr) 72px`; }
 
 function selOpts(val) { return RATINGS.map(r=>`<option value="${r.v}"${r.v===val?' selected':''}>${r.l}</option>`).join(''); }
 
@@ -1001,18 +1060,17 @@ function buildWeekPanel(def, t, isFirst) {
     <span class="legend-item"><span class="ldot" style="background:var(--green)"></span>95–100% Exceptional</span>
   </div>` : '';
 
-  const colHds = `<div class="col-hd left">Day</div>${def.critLbls.map(l=>`<div class="col-hd">${l}</div>`).join('')}${def.test?`<div class="col-hd">Test %</div>`:''}<div></div>`;
+  const colHds = `<div class="col-hd left">Day</div>${def.critLbls.map(l=>`<div class="col-hd">${l}</div>`).join('')}<div></div>`;
 
   const prefix = `${t.id}_${def.id}`;
 
   const daysHTML = wd.days.map((d,i) => {
     const crits = def.crit.map(c => buildRdrop(t.id, def.id, i, c, d[c])).join('');
-    const testH = def.test ? `<div class="test-wrap"><input type="number" class="test-input ${testCls(d.test)}" id="${prefix}_d${i}_test" min="0" max="100" placeholder="—" value="${d.test||''}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="numeric" oninput="onTest('${t.id}','${def.id}',${i},this)"></div>` : '';
     const hasNote = !!d.note;
     return `<div class="day-card">
       <div class="day-row" style="grid-template-columns:${g}">
         <div class="day-lbl"><div class="day-num-badge">${i+1}</div>Day ${i+1}</div>
-        ${crits}${testH}
+        ${crits}
         <button class="note-btn" onclick="toggleNote('${prefix}',${i},this)">${hasNote?'💬 Note':'+ Note'}</button>
       </div>
       <div class="note-wrap${hasNote?' open':''}" id="${prefix}_d${i}_nw">
@@ -1033,6 +1091,22 @@ function buildWeekPanel(def, t, isFirst) {
     <div style="display:grid;grid-template-columns:${g};gap:7px;padding:0 15px;margin-bottom:4px">${colHds}</div>
     ${daysHTML}
     <div class="divider"><span>Weekly Summary</span></div>
+    ${def.test ? `<div class="weekly-test-card">
+      <div class="wt-left">
+        <div class="wt-icon">📊</div>
+        <div>
+          <div class="wt-lbl">End-of-Week Test</div>
+          <div class="wt-meta">Score from the test held at the end of ${def.lbl}</div>
+        </div>
+      </div>
+      <div class="wt-right">
+        <input type="number" class="wt-input ${testCls(wd.test)}" id="${prefix}_wktest"
+          min="0" max="100" placeholder="—" value="${wd.test||''}"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="numeric"
+          oninput="onWeekTest('${t.id}','${def.id}',this)">
+        <span class="wt-pct">%</span>
+      </div>
+    </div>` : ''}
     <div class="comm-card">
       <div class="comm-hd"><div class="comm-icon ci-t">📝</div><div><div class="comm-meta-lbl">${def.staffLbl} Notes</div><div class="comm-meta-title">${def.lbl} — Overall Comments</div></div></div>
       <textarea class="comm-ta" id="${prefix}_wc" placeholder="Weekly summary, observations…" oninput="onWC('${t.id}','${def.id}','weeklyComment',this.value)">${wd.weeklyComment||''}</textarea>
@@ -1224,8 +1298,8 @@ function onRating(tid, wid, di, crit, el) {
   dirty(); refreshScore(tid, wid); refreshDot(t, wid);
 }
 
-function onTest(tid, wid, di, el) {
-  if (!editUnlocked) { el.value = active().weeks[wid].days[di].test || ''; return promptEditUnlock(); }
+function onWeekTest(tid, wid, el) {
+  if (!editUnlocked) { el.value = (active().weeks[wid] && active().weeks[wid].test) || ''; return promptEditUnlock(); }
   // Sanitize: keep only digits, clamp to 0-100
   let raw = String(el.value || '').replace(/[^\d]/g, '');
   if (raw !== '') {
@@ -1236,9 +1310,9 @@ function onTest(tid, wid, di, el) {
   }
   if (el.value !== raw) el.value = raw;
   const t = S.trainees.find(x=>x.id===tid);
-  t.weeks[wid].days[di].test = raw;
-  el.className = `test-input ${testCls(raw)}`;
-  dirty(); refreshScore(tid, wid);
+  t.weeks[wid].test = raw;
+  el.className = `wt-input ${testCls(raw)}`;
+  dirty(); refreshScore(tid, wid); refreshDot(t, wid);
 }
 
 function onNote(tid, wid, di, val) {
@@ -1744,11 +1818,10 @@ function buildReadonlyWeek(t, def) {
   const avg = weekAvg(t, def.id);
   const phaseLbl = def.phase==='training' ? 'Training' : 'Mentoring';
 
-  // Days table
+  // Days table (no test column anymore)
   const headers = `<tr>
     <th class="left">Day</th>
     ${def.critLbls.map(l=>`<th>${l}</th>`).join('')}
-    ${def.test ? '<th>Test</th>' : ''}
   </tr>`;
 
   const rows = wd.days.map((d, i) => {
@@ -1759,13 +1832,16 @@ function buildReadonlyWeek(t, def) {
       const cls = sc(SCORE[v]);
       return `<td><span class="rw-pill op-${cls}">${lbl}</span></td>`;
     }).join('');
-    const testCell = def.test
-      ? (d.test!=='' && d.test!=null
-          ? `<td class="rw-test sc-${sc(parseFloat(d.test))}">${d.test}%</td>`
-          : `<td><span class="rw-empty-cell">—</span></td>`)
-      : '';
-    return `<tr><td class="left">Day ${i+1}</td>${cells}${testCell}</tr>`;
+    return `<tr><td class="left">Day ${i+1}</td>${cells}</tr>`;
   }).join('');
+
+  // End-of-week test (only for w1 in current schema)
+  const testHTML = def.test ? `<div class="rw-test-row">
+    <span class="rw-test-lbl">📊 End-of-Week Test:</span>
+    ${(wd.test !== '' && wd.test != null)
+      ? `<span class="rw-test-val sc-${sc(parseFloat(wd.test))}">${wd.test}%</span>`
+      : `<span class="rw-empty-cell">—</span>`}
+  </div>` : '';
 
   // Notes
   const wc = wd.weeklyComment || '';
@@ -1783,6 +1859,7 @@ function buildReadonlyWeek(t, def) {
       <thead>${headers}</thead>
       <tbody>${rows}</tbody>
     </table>
+    ${testHTML}
     <div class="rw-notes">
       <div class="rw-note">
         <div class="rw-note-lbl">${def.staffLbl} weekly notes</div>
