@@ -1472,8 +1472,11 @@ async function toggleEditLock() {
   await promptEditUnlock();
 }
 
+let _editPromptOpen = null;
 function promptEditUnlock() {
-  return new Promise((resolve) => {
+  // If already open, return the existing promise instead of stacking new modals
+  if (_editPromptOpen) return _editPromptOpen;
+  _editPromptOpen = new Promise((resolve) => {
     const host = document.getElementById('modal-host');
     let resolved = false;
     const cleanup = () => {
@@ -1481,6 +1484,7 @@ function promptEditUnlock() {
       document.body.style.overflow = '';
       document.body.classList.remove('modal-open');
       document.removeEventListener('keydown', onKey);
+      _editPromptOpen = null;
     };
     const finish = (val) => {
       if (resolved) return;
