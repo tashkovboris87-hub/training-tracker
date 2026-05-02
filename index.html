@@ -873,15 +873,6 @@ let S = window.FORM_DATA
   || (() => { try { return JSON.parse(localStorage.getItem('tt3_state')||'null'); } catch(e){ return null; } })()
   || emptyState();
 
-// Migrations
-if (!S.trainees) { S = emptyState(); }
-if (!S.activeId && S.trainees.length) S.activeId = S.trainees[0].id;
-if (!S.activeWeek || S.activeWeek === 'w0') S.activeWeek = 'w1';
-if (!S.archived) S.archived = DEFAULT_ARCHIVED;
-// Drop legacy onboarding (w0) data — it's no longer part of the tool
-S.trainees.forEach(t => { if (t.weeks && t.weeks.w0) delete t.weeks.w0; });
-S.archived.forEach(t => { if (t.weeks && t.weeks.w0) delete t.weeks.w0; });
-
 // Migration: per-day test → week-level test (only w1 keeps a test now)
 function migrateTests(t) {
   if (!t.weeks) return;
@@ -902,9 +893,27 @@ function migrateTests(t) {
     (wd.days||[]).forEach(d => { if ('test' in d) delete d.test; });
   });
 }
-S.trainees.forEach(migrateTests);
-S.archived.forEach(migrateTests);
-S.trainees.forEach(t => { WD.forEach(def => { if (!t.weeks[def.id]) t.weeks[def.id] = emptyWeeks()[def.id]; }); });
+
+// Apply all migrations to a state object. Used at init and after every Gist pull.
+function applyMigrations(state) {
+  if (!state || !state.trainees) return state;
+  if (!state.activeId && state.trainees.length) state.activeId = state.trainees[0].id;
+  if (!state.activeWeek || state.activeWeek === 'w0') state.activeWeek = 'w1';
+  if (!state.archived) state.archived = DEFAULT_ARCHIVED;
+  // Drop legacy onboarding (w0) data
+  state.trainees.forEach(t => { if (t.weeks && t.weeks.w0) delete t.weeks.w0; });
+  state.archived.forEach(t => { if (t.weeks && t.weeks.w0) delete t.weeks.w0; });
+  // Test field migration
+  state.trainees.forEach(migrateTests);
+  state.archived.forEach(migrateTests);
+  // Ensure all weeks exist
+  state.trainees.forEach(t => { WD.forEach(def => { if (!t.weeks[def.id]) t.weeks[def.id] = emptyWeeks()[def.id]; }); });
+  return state;
+}
+
+// Initial load — keep localStorage as offline fallback only
+if (!S.trainees) { S = emptyState(); }
+applyMigrations(S);
 
 function active() { return S.trainees.find(t => t.id === S.activeId) || S.trainees[0]; }
 
@@ -2104,7 +2113,17 @@ function setIndicator(state, msg) {
 
 async function pushGist() {
   if (!gistReady()) return;
+  if (_gistPushInFlight) {
+    // A push is already going; reschedule to push again afterwards
+    scheduleGistPush();
+    return;
+  }
+  _gistPushInFlight = true;
   setIndicator('busy', 'Saving…');
+  // Snapshot the body BEFORE the await to avoid pushing data that changes mid-flight
+  const body = JSON.stringify({ files: { [window.GIST_FILE]: { content: JSON.stringify(S, null, 2) } } });
+  const wasPendingBefore = _gistPushPending;
+  _gistPushPending = false;
   try {
     const res = await fetch(`https://api.github.com/gists/${window.GIST_ID}`, {
       method: 'PATCH',
@@ -2114,7 +2133,7 @@ async function pushGist() {
         'X-GitHub-Api-Version': '2022-11-28',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ files: { [window.GIST_FILE]: { content: JSON.stringify(S, null, 2) } } })
+      body
     });
     if (!res.ok) {
       const errBody = await res.text();
@@ -2124,11 +2143,18 @@ async function pushGist() {
   } catch(e) {
     setIndicator('err', 'Sync failed ✕');
     console.error('Gist push error:', e.message);
+    // Restore pending flag so beforeunload still flushes
+    _gistPushPending = wasPendingBefore;
+  } finally {
+    _gistPushInFlight = false;
   }
 }
 
+let _pullInProgress = false;
 async function pullGist() {
   if (!gistReady()) return;
+  if (_pullInProgress) return;
+  _pullInProgress = true;
   setIndicator('busy', 'Loading…');
   try {
     const res = await fetch(`https://api.github.com/gists/${window.GIST_ID}`, {
@@ -2136,7 +2162,8 @@ async function pullGist() {
         'Authorization': `Bearer ${window.GIST_TOKEN}`,
         'Accept': 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28'
-      }
+      },
+      cache: 'no-store'
     });
     if (!res.ok) {
       const errBody = await res.text();
@@ -2153,10 +2180,18 @@ async function pullGist() {
       return;
     }
     const loaded = JSON.parse(file.content);
+    if (!loaded.trainees) {
+      setIndicator('ok', 'Gist invalid — starting fresh');
+      return;
+    }
+    // Don't clobber unpushed local edits — push them out first, skip the pull
+    if (_gistPushPending || _gistPushInFlight) {
+      console.log('Skipping pull: local has unpushed changes');
+      setIndicator('ok', 'Local changes preserved');
+      return;
+    }
     S = loaded;
-    S.trainees.forEach(t => { WD.forEach(def => { if(!t.weeks[def.id]) t.weeks[def.id]=emptyWeeks()[def.id]; }); });
-    if (!S.activeId && S.trainees.length) S.activeId = S.trainees[0].id;
-    if (!S.activeWeek) S.activeWeek = 'w1';
+    applyMigrations(S);
     try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
     setIndicator('ok', 'Loaded ✓ ' + new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'}));
     renderAll();
@@ -2164,15 +2199,41 @@ async function pullGist() {
     setIndicator('err', 'Load failed ✕');
     console.error('Gist pull error:', e.message);
     console.error('Full error:', e);
+  } finally {
+    _pullInProgress = false;
   }
 }
 
 let _gistTimer = null;
+let _gistPushPending = false;   // True between dirty() and successful pushGist
+let _gistPushInFlight = false;  // True while a pushGist fetch is awaiting
+
 function scheduleGistPush() {
   if (!gistReady()) return;
+  _gistPushPending = true;
   clearTimeout(_gistTimer);
-  _gistTimer = setTimeout(pushGist, 2500);
+  _gistTimer = setTimeout(() => { pushGist(); }, 800);
 }
+
+// Flush any pending push synchronously before page unload (so data isn't lost on refresh)
+window.addEventListener('beforeunload', (e) => {
+  if (!gistReady() || !_gistPushPending) return;
+  // Clear the debounce — we'll force-push now
+  clearTimeout(_gistTimer);
+  // Use sync XHR to ensure the request goes out before the page unloads
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PATCH', `https://api.github.com/gists/${window.GIST_ID}`, false); // false = synchronous
+    xhr.setRequestHeader('Authorization', 'Bearer ' + window.GIST_TOKEN);
+    xhr.setRequestHeader('Accept', 'application/vnd.github+json');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({ files: { [window.GIST_FILE]: { content: JSON.stringify(S, null, 2) } } }));
+    _gistPushPending = false;
+  } catch(err) {
+    // If sync fails, at least localStorage has it
+    console.error('Beforeunload flush failed:', err);
+  }
+});
 
 /* ══════════════════════════════════════════════════════
    INIT
