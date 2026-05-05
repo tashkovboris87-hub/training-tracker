@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scripting Training Tracker · Ipsos Bulgaria</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script>
 window.FORM_DATA  = null;              // replaced on backup
 // Gist sync credentials are stored in localStorage per device (never in this file).
@@ -285,6 +285,8 @@ body {
   border-bottom: 1px solid var(--border);
   position: sticky; top: 100px; z-index: 150;
 }
+/* When trainee-bar is hidden (Hub/Archive tabs), week-bar sticks directly under header */
+body.no-trainee-bar .week-bar-outer { top: 54px; }
 body.modal-open .week-bar-outer,
 body.modal-open .trainee-bar-outer { visibility:hidden; }
 
@@ -684,6 +686,202 @@ body.readonly .editor-only { display:none !important; }
 @keyframes toast-in  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 @keyframes toast-out { to{opacity:0;transform:translateY(-6px)} }
 
+/* ── HUB ───────────────────────────────────────────── */
+.hub-hd {
+  display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+  padding:0 0 14px; margin-bottom:14px; border-bottom:1px solid var(--border);
+}
+.hub-subtabs {
+  display:flex; gap:4px; margin-bottom:18px;
+  background:var(--bg2); padding:4px; border-radius:10px; width:fit-content;
+}
+.hub-stab {
+  display:flex; align-items:center; gap:7px;
+  padding:8px 16px; border:none; background:transparent; cursor:pointer;
+  font-family:'Nunito',sans-serif; font-size:13px; font-weight:700;
+  color:var(--muted); border-radius:7px; transition:all .15s;
+}
+.hub-stab:hover { color:var(--navy); }
+.hub-stab.active { background:var(--surface); color:var(--navy); box-shadow:0 1px 4px rgba(25,33,102,.08); }
+.hub-stab.active svg { color:var(--teal-deep); }
+
+.hub-empty {
+  padding:30px 20px; text-align:center;
+  color:var(--muted); font-size:13px; font-style:italic;
+  background:var(--bg2); border:1px dashed var(--border-m); border-radius:var(--r-sm);
+  margin-bottom:14px;
+}
+
+/* Calendar toolbar */
+.cal-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.cal-nav-btn {
+  width:32px; height:32px; border-radius:8px; border:1px solid var(--border-m);
+  background:var(--surface); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--navy); transition:all .15s;
+}
+.cal-nav-btn:hover { background:var(--navy-tint); border-color:var(--navy); }
+.cal-month-lbl {
+  font-family:'Nunito',sans-serif; font-size:18px; font-weight:900;
+  color:var(--navy); min-width:200px; text-align:center; text-transform:capitalize;
+}
+.cal-today-btn {
+  padding:6px 14px; border-radius:7px; border:1px solid var(--border-m);
+  background:var(--surface); cursor:pointer;
+  font-family:'Nunito',sans-serif; font-size:12px; font-weight:700; color:var(--muted);
+  transition:all .15s;
+}
+.cal-today-btn:hover { background:var(--navy-tint); color:var(--navy); border-color:var(--navy); }
+
+/* Calendar grid */
+.cal-grid-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; box-shadow:0 1px 6px rgba(25,33,102,.05); }
+.cal-grid {
+  display:grid; grid-template-columns:repeat(7, 1fr); gap:0;
+  background:var(--border);
+}
+.cal-dayname {
+  background:var(--navy-tint); padding:9px 6px; text-align:center;
+  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+}
+.cal-cell {
+  background:var(--surface); min-height:96px; padding:6px 7px;
+  cursor:pointer; transition:background .12s; position:relative;
+}
+.cal-cell:hover { background:rgba(0,196,208,.05); }
+.cal-cell.oom { background:#fafbfd; }
+.cal-cell.oom .cal-cell-num { color:var(--muted2); }
+.cal-cell.today { background:rgba(0,196,208,.07); }
+.cal-cell.today .cal-cell-num {
+  background:var(--teal); color:#fff;
+  width:22px; height:22px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.cal-cell-num { font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:var(--navy); margin-bottom:4px; display:inline-block; line-height:1; }
+.cal-cell-events { display:flex; flex-direction:column; gap:2px; }
+.cal-evt {
+  padding:3px 6px; border-radius:4px;
+  font-size:10.5px; font-weight:700; color:var(--navy); cursor:pointer;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  display:flex; align-items:center; gap:5px;
+  transition:background .12s;
+}
+.cal-evt:hover { filter:brightness(.95); }
+.cal-evt-time { font-weight:800; opacity:.8; flex-shrink:0; font-size:9.5px; }
+.cal-evt-name { overflow:hidden; text-overflow:ellipsis; }
+.cal-evt-more { font-size:10px; font-weight:700; color:var(--teal-deep); padding:2px 6px; cursor:pointer; }
+.cal-evt-more:hover { text-decoration:underline; }
+
+/* Event list under calendar */
+.cal-list-hd {
+  margin:24px 0 10px; font-size:11px; font-weight:800; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--muted);
+}
+.cal-list { display:flex; flex-direction:column; gap:9px; }
+.hub-evt-row {
+  display:flex; align-items:stretch; gap:0;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm);
+  cursor:pointer; transition:all .15s; overflow:hidden;
+  box-shadow:0 1px 4px rgba(25,33,102,.04);
+}
+.hub-evt-row:hover { box-shadow:0 4px 14px rgba(25,33,102,.1); transform:translateY(-1px); }
+.hub-evt-date {
+  padding:11px 14px; background:var(--bg2);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border-right:1px solid var(--border); min-width:64px;
+}
+.hub-evt-day { font-family:'Nunito',sans-serif; font-size:22px; font-weight:900; color:var(--navy); line-height:1; }
+.hub-evt-mo { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-top:2px; }
+.hub-evt-bar { width:4px; flex-shrink:0; }
+.hub-evt-body { padding:11px 14px; flex:1; min-width:0; }
+.hub-evt-title { font-family:'Nunito',sans-serif; font-size:14px; font-weight:800; margin-bottom:4px; }
+.hub-evt-platform { font-weight:800; }
+.hub-evt-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); font-weight:600; }
+.hub-evt-meta span { display:inline-flex; align-items:center; gap:5px; }
+
+/* Event modal */
+.evt-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.evt-trainees-list {
+  display:flex; flex-direction:column; gap:6px;
+  max-height:280px; overflow-y:auto;
+  background:var(--bg2); padding:10px; border-radius:var(--r-sm); border:1px solid var(--border);
+}
+.evt-trainee-row {
+  display:flex; align-items:stretch; gap:6px;
+}
+.evt-trainee-row .setup-input { flex:1; }
+.evt-trainee-rm {
+  width:34px; flex-shrink:0;
+  border:1px solid var(--border-m); background:var(--surface);
+  border-radius:var(--r-sm); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted); transition:all .15s;
+}
+.evt-trainee-rm:hover { background:var(--red-tint); color:var(--red); border-color:var(--red); }
+/* Legacy checkbox grid kept for material tag selection */
+.evt-trainees {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:6px;
+  max-height:200px; overflow-y:auto;
+  background:var(--bg2); padding:10px; border-radius:var(--r-sm); border:1px solid var(--border);
+}
+.evt-trainee-chk {
+  display:flex; align-items:center; gap:7px; padding:5px 8px; cursor:pointer;
+  font-size:12.5px; font-weight:700; color:var(--navy); border-radius:6px;
+  transition:background .12s;
+}
+.evt-trainee-chk:hover { background:rgba(25,33,102,.06); }
+.evt-trainee-chk input { cursor:pointer; }
+.evt-trainee-chk em { color:var(--muted2); font-size:10px; font-weight:600; font-style:normal; }
+
+/* Materials */
+.mat-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.mat-filter { width:auto; min-width:140px; padding:7px 10px; font-size:12px; }
+.mat-list { display:flex; flex-direction:column; gap:10px; }
+.mat-card {
+  display:flex; align-items:flex-start; gap:14px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm);
+  padding:14px 16px; box-shadow:0 1px 4px rgba(25,33,102,.04);
+  transition:all .15s;
+}
+.mat-card:hover { box-shadow:0 4px 14px rgba(25,33,102,.1); }
+.mat-icon {
+  width:42px; height:42px; flex-shrink:0;
+  background:var(--navy-tint); border-radius:9px;
+  display:flex; align-items:center; justify-content:center; color:var(--navy);
+}
+.mat-body { flex:1; min-width:0; }
+.mat-row1 { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.mat-title {
+  font-family:'Nunito',sans-serif; font-size:14px; font-weight:800;
+  color:var(--navy); text-decoration:none; line-height:1.4;
+}
+.mat-title:hover { color:var(--teal-deep); text-decoration:underline; }
+.mat-actions { display:flex; gap:4px; flex-shrink:0; }
+.mat-act {
+  width:28px; height:28px; border-radius:6px; border:none; background:transparent;
+  cursor:pointer; color:var(--muted); transition:all .12s;
+  display:flex; align-items:center; justify-content:center;
+}
+.mat-act:hover { background:var(--navy-tint); color:var(--navy); }
+.mat-act-danger:hover { background:var(--red-tint); color:var(--red); }
+.mat-meta { font-size:11px; font-weight:600; color:var(--muted); margin-top:2px; }
+.mat-meta .mat-type { color:var(--teal-deep); font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-size:10px; }
+.mat-desc { font-size:12.5px; color:var(--navy); line-height:1.5; margin-top:6px; }
+.mat-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
+.mat-tag {
+  padding:2px 8px; border-radius:10px;
+  background:var(--teal-tint); color:var(--teal-deep);
+  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em;
+}
+
+@media(max-width:700px) {
+  .cal-cell { min-height:60px; padding:4px; }
+  .cal-cell-num { font-size:11px; }
+  .cal-evt-name { display:none; }
+  .cal-evt { padding:2px 4px; font-size:9px; }
+  .evt-grid { grid-template-columns:1fr; }
+}
+
+
 /* ── MODAL ── */
 .mdl-back {
   position: fixed; inset: 0; z-index: 9999;
@@ -904,6 +1102,7 @@ body.readonly .editor-only { display:none !important; }
     </div>
     <div class="setup-actions" id="setup-actions">
       <button class="btn btn-archive" onclick="askArchive()" title="Move this trainee to the Archive">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <span>Archive Trainee</span>
       </button>
     </div>
@@ -921,8 +1120,9 @@ body.readonly .editor-only { display:none !important; }
     <button class="week-btn"        data-tab="w6"  onclick="goWeek('w6')"><div class="w-dot" id="wd-w6"></div>Week 6</button>
     <button class="week-btn"        data-tab="w7"  onclick="goWeek('w7')"><div class="w-dot" id="wd-w7"></div>Week 7</button>
     <button class="week-btn"        data-tab="w8"  onclick="goWeek('w8')"><div class="w-dot" id="wd-w8"></div>Week 8</button>
-    <button class="week-btn"        data-tab="ov"  onclick="goWeek('ov')">Overview</button>
-    <button class="week-btn"        data-tab="arch" onclick="goWeek('arch')">Archive</button>
+    <button class="week-btn"        data-tab="ov"  onclick="goWeek('ov')"><svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Overview</button>
+    <button class="week-btn"        data-tab="hub" onclick="goWeek('hub')"><svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Trainer's Hub</button>
+    <button class="week-btn"        data-tab="arch" onclick="goWeek('arch')"><svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Archive</button>
   </div>
 </div>
 
@@ -930,7 +1130,8 @@ body.readonly .editor-only { display:none !important; }
 <div class="main" id="main"></div>
 
 <footer class="footer">
-  <div class="footer-name">Training Tracker</div><div>Ipsos Bulgaria SD/QA · Internal use only</div>
+  <div class="footer-name">Training Tracker</div>
+  <div>Built for Ipsos Bulgaria SD/QA · Internal use only</div>
 </footer>
 
 <!-- MODAL HOST -->
@@ -955,6 +1156,32 @@ const RATINGS = [
   {v:'holidays',      l:'Holidays'},
 ];
 const SCORE = {exceptional:95,no_concern:75,attention:55,cause_concern:35,not_applicable:75,paid_leave:60,sick_leave:60,holidays:60};
+
+/* ── HUB: PLATFORMS & MATERIAL TYPES ─────────────── */
+const HUB_PLATFORMS = [
+  { v:'dim_sw',  l:'Dimensions SW', short:'Dim SW',  color:'#192166' },  // navy
+  { v:'ifld_sw', l:'iField SW',     short:'iFld SW', color:'#00C4D0' },  // teal
+  { v:'dim_qa',  l:'Dimensions QA', short:'Dim QA',  color:'#3d9e4a' },  // green
+  { v:'ifld_qa', l:'iField QA',     short:'iFld QA', color:'#d97706' },  // amber
+];
+const HUB_PLATFORM_BY_V = Object.fromEntries(HUB_PLATFORMS.map(p => [p.v, p]));
+
+const HUB_MTYPES = [
+  { v:'doc',     l:'Document'    },
+  { v:'video',   l:'Video'       },
+  { v:'slides',  l:'Slide deck'  },
+  { v:'tool',    l:'Tool'        },
+  { v:'article', l:'Article'     },
+  { v:'other',   l:'Other'       },
+];
+const HUB_MTAGS = [
+  { v:'dim',     l:'Dimensions' },
+  { v:'ifld',    l:'iField' },
+  { v:'sw',      l:'Scripting' },
+  { v:'qa',      l:'QA' },
+  { v:'general', l:'General' },
+];
+
 
 const WD = [
   {id:'w1',lbl:'Week 1',phase:'training',staffLbl:'Trainer',
@@ -1054,7 +1281,10 @@ const DEFAULT_ARCHIVED = [
 
 function emptyState() {
   const t = newTrainee();
-  return { trainees:[t], activeId:t.id, activeWeek:'w1', archived: DEFAULT_ARCHIVED };
+  return {
+    trainees:[t], activeId:t.id, activeWeek:'w1', archived: DEFAULT_ARCHIVED,
+    hub: { events: [], materials: [], hubTab: 'cal', calCursor: '' }
+  };
 }
 
 let S = window.FORM_DATA
@@ -1096,6 +1326,11 @@ function applyMigrations(state) {
   state.archived.forEach(migrateTests);
   // Ensure all weeks exist
   state.trainees.forEach(t => { WD.forEach(def => { if (!t.weeks[def.id]) t.weeks[def.id] = emptyWeeks()[def.id]; }); });
+  // Hub: events + materials live alongside trainees (independent feature)
+  if (!state.hub) state.hub = { events: [], materials: [], hubTab: 'cal', calCursor: '' };
+  if (!Array.isArray(state.hub.events))    state.hub.events = [];
+  if (!Array.isArray(state.hub.materials)) state.hub.materials = [];
+  if (!state.hub.hubTab) state.hub.hubTab = 'cal';
   return state;
 }
 
@@ -1328,6 +1563,12 @@ function buildOverviewPanel() {
   </div>`;
 }
 
+function buildHubPanel() {
+  return `<div class="panel" id="panel-hub">
+    <div id="hub-inner"></div>
+  </div>`;
+}
+
 /* ══════════════════════════════════════════════════════
    RENDER
 ══════════════════════════════════════════════════════ */
@@ -1351,9 +1592,9 @@ function renderTraineeBar() {
 function renderMain() {
   const t = active();
   const main = document.getElementById('main');
-  const validWeek = WD.find(d=>d.id===S.activeWeek) || S.activeWeek==='ov' || S.activeWeek==='arch';
+  const validWeek = WD.find(d=>d.id===S.activeWeek) || S.activeWeek==='ov' || S.activeWeek==='arch' || S.activeWeek==='hub';
   if (!validWeek) S.activeWeek = 'w1';
-  const panels = WD.map((def, i) => buildWeekPanel(def, t, S.activeWeek===def.id || (i===0 && !WD.find(d=>d.id===S.activeWeek) && S.activeWeek!=='ov' && S.activeWeek!=='arch'))).join('') + buildOverviewPanel() + buildArchivePanel();
+  const panels = WD.map((def, i) => buildWeekPanel(def, t, S.activeWeek===def.id || (i===0 && !WD.find(d=>d.id===S.activeWeek) && S.activeWeek!=='ov' && S.activeWeek!=='arch' && S.activeWeek!=='hub'))).join('') + buildOverviewPanel() + buildHubPanel() + buildArchivePanel();
   main.innerHTML = panels;
   // Restore active week tab state
   document.querySelectorAll('.week-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === S.activeWeek));
@@ -1366,6 +1607,15 @@ function renderMain() {
   // Lazy render for special tabs
   if (S.activeWeek === 'ov')   renderOverview();
   if (S.activeWeek === 'arch') renderArchive();
+  if (S.activeWeek === 'hub')  renderHub();
+  // Apply visibility rules for global tabs (setup/trainee-bar hidden on ov/arch/hub)
+  const isGlobal = (S.activeWeek==='ov' || S.activeWeek==='arch' || S.activeWeek==='hub');
+  const noTraineeBar = (S.activeWeek==='hub' || S.activeWeek==='arch');
+  const setupEl = document.getElementById('setup-outer');
+  if (setupEl) setupEl.style.display = isGlobal ? 'none' : '';
+  const tbar = document.querySelector('.trainee-bar-outer');
+  if (tbar) tbar.style.display = noTraineeBar ? 'none' : '';
+  document.body.classList.toggle('no-trainee-bar', noTraineeBar);
 }
 
 function renderSetup() {
@@ -1429,6 +1679,632 @@ function renderOverview() {
       <tbody>${rows}</tbody>
     </table></div>`;
 }
+
+/* ══════════════════════════════════════════════════════
+   TRAINER'S HUB
+══════════════════════════════════════════════════════ */
+function renderHub() {
+  const el = document.getElementById('hub-inner');
+  if (!el) return;
+  const tab = S.hub.hubTab || 'cal';
+  el.innerHTML = `
+    <div class="hub-hd">
+      <div>
+        <div class="week-phase-lbl">Shared resources for the SD/QA training team</div>
+        <div class="week-title">Trainer's <em>Hub</em></div>
+      </div>
+    </div>
+    <div class="hub-subtabs">
+      <button class="hub-stab ${tab==='cal'?'active':''}" onclick="hubGo('cal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendar
+      </button>
+      <button class="hub-stab ${tab==='mat'?'active':''}" onclick="hubGo('mat')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Materials
+      </button>
+    </div>
+    <div id="hub-content"></div>`;
+  if (tab==='cal') renderHubCalendar();
+  if (tab==='mat') renderHubMaterials();
+}
+
+function hubGo(tab) {
+  S.hub.hubTab = tab;
+  renderHub();
+  dirty();
+}
+
+/* ───── CALENDAR ───── */
+function hubCursorDate() {
+  // Cursor is the first day of currently visible month, ISO yyyy-mm-01
+  if (!S.hub.calCursor) {
+    const now = new Date();
+    S.hub.calCursor = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  }
+  return new Date(S.hub.calCursor + 'T00:00:00');
+}
+
+function hubMoveMonth(delta) {
+  const cur = hubCursorDate();
+  cur.setMonth(cur.getMonth() + delta);
+  S.hub.calCursor = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-01`;
+  renderHubCalendar();
+  dirty();
+}
+
+function hubMonthLabel(d) {
+  return d.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' });
+}
+
+function renderHubCalendar() {
+  const host = document.getElementById('hub-content');
+  if (!host) return;
+  const cur = hubCursorDate();
+  const year = cur.getFullYear();
+  const month = cur.getMonth();
+  // First Monday on or before the 1st of the month
+  const first = new Date(year, month, 1);
+  const dow = (first.getDay() + 6) % 7; // Mon=0..Sun=6
+  const gridStart = new Date(year, month, 1 - dow);
+
+  // Build 6 rows of 7 days = 42 cells
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart); d.setDate(gridStart.getDate() + i);
+    cells.push(d);
+  }
+
+  // Index events by date — events spanning multiple days appear on every day in [date, endDate]
+  const eventsByDay = {};
+  const addDays = (iso, n) => {
+    const d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
+  S.hub.events.forEach(ev => {
+    const start = ev.date;
+    const end = ev.endDate || ev.date;
+    if (!start) return;
+    let cur = start;
+    let safety = 0;
+    while (cur <= end && safety < 365) {
+      (eventsByDay[cur] = eventsByDay[cur] || []).push(ev);
+      cur = addDays(cur, 1);
+      safety++;
+    }
+  });
+
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayHdr = dayNames.map(d => `<div class="cal-dayname">${d}</div>`).join('');
+
+  const cellsHTML = cells.map(d => {
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const inMonth = d.getMonth() === month;
+    const isToday = d.getTime() === today.getTime();
+    const evts = eventsByDay[iso] || [];
+    const evtsHTML = evts.slice(0, 3).map(ev => {
+      const plat = HUB_PLATFORM_BY_V[ev.platform] || { color:'#6b779e', short:'?', l:'?' };
+      const trainerShort = ev.trainer ? ' · ' + ev.trainer.split(' ')[0] : '';
+      return `<div class="cal-evt" style="background:${plat.color}1a;border-left:3px solid ${plat.color}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${escapeAttr(plat.l + (ev.trainer ? ' · ' + ev.trainer : ''))}">
+        <span class="cal-evt-name">${escapeHtml(plat.short || '—')}${escapeHtml(trainerShort)}</span>
+      </div>`;
+    }).join('');
+    const more = evts.length > 3 ? `<div class="cal-evt-more" onclick="event.stopPropagation();selectCalDay('${iso}')">+${evts.length-3} more</div>` : '';
+    return `<div class="cal-cell ${inMonth?'':'oom'} ${isToday?'today':''}" data-date="${iso}" onclick="addEventOnDate('${iso}')">
+      <div class="cal-cell-num">${d.getDate()}</div>
+      <div class="cal-cell-events">${evtsHTML}${more}</div>
+    </div>`;
+  }).join('');
+
+  // List of trainings whose start OR end falls in this month
+  const monthEvents = S.hub.events.filter(ev => {
+    const start = ev.date;
+    const end = ev.endDate || ev.date;
+    const monthStart = `${year}-${String(month+1).padStart(2,'0')}-01`;
+    const monthEnd = `${year}-${String(month+1).padStart(2,'0')}-31`;
+    // Event overlaps the month if it starts before month-end and ends after month-start
+    return start <= monthEnd && end >= monthStart;
+  }).sort((a,b) => (a.date).localeCompare(b.date));
+
+  const listHTML = monthEvents.length === 0
+    ? `<div class="hub-empty">No trainings this month. Click any day to add one.</div>`
+    : monthEvents.map(ev => {
+        const plat = HUB_PLATFORM_BY_V[ev.platform] || { color:'#6b779e', l:'Unknown' };
+        const dt = new Date(ev.date + 'T00:00:00');
+        const dateLbl = dt.toLocaleDateString('bg-BG', { weekday:'short', day:'numeric', month:'short' });
+        const endDt = new Date((ev.endDate || ev.date) + 'T00:00:00');
+        const isMultiDay = (ev.endDate && ev.endDate !== ev.date);
+        const rangeStr = isMultiDay
+          ? `${dt.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})} – ${endDt.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})}`
+          : dt.toLocaleDateString('bg-BG',{day:'numeric',month:'short',year:'numeric'});
+        const trainees = (ev.trainees || []).filter(n => n && String(n).trim());
+        return `<div class="hub-evt-row" onclick="editEvent('${ev.id}')">
+          <div class="hub-evt-date">
+            <div class="hub-evt-day">${dt.getDate()}</div>
+            <div class="hub-evt-mo">${dateLbl.split(' ').slice(1).join(' ')}</div>
+          </div>
+          <div class="hub-evt-bar" style="background:${plat.color}"></div>
+          <div class="hub-evt-body">
+            <div class="hub-evt-title"><span class="hub-evt-platform" style="color:${plat.color}">${plat.l}</span></div>
+            <div class="hub-evt-meta">
+              <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${rangeStr}</span>
+              ${ev.trainer ? `<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${escapeHtml(ev.trainer)}</span>` : ''}
+              ${trainees.length ? `<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> ${trainees.length} trainee${trainees.length!==1?'s':''}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  host.innerHTML = `
+    <div class="cal-toolbar">
+      <button class="cal-nav-btn" onclick="hubMoveMonth(-1)" aria-label="Previous month">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="cal-month-lbl">${hubMonthLabel(cur)}</div>
+      <button class="cal-nav-btn" onclick="hubMoveMonth(1)" aria-label="Next month">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="cal-today-btn" onclick="hubGoToday()">Today</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-navy editor-only" onclick="addEventOnDate('${(new Date()).toISOString().slice(0,10)}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Training
+      </button>
+    </div>
+    <div class="cal-grid-wrap">
+      <div class="cal-grid">
+        ${dayHdr}
+        ${cellsHTML}
+      </div>
+    </div>
+    <div class="cal-list-hd">Trainings in ${hubMonthLabel(cur)}</div>
+    <div class="cal-list">${listHTML}</div>`;
+}
+
+function hubGoToday() {
+  const now = new Date();
+  S.hub.calCursor = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  renderHubCalendar();
+  dirty();
+}
+
+function selectCalDay(iso) {
+  // Show all events that COVER this day (start<=iso<=end)
+  const events = S.hub.events
+    .filter(ev => (ev.date <= iso) && ((ev.endDate || ev.date) >= iso))
+    .sort((a,b) => a.date.localeCompare(b.date));
+  if (events.length === 0) { addEventOnDate(iso); return; }
+  const dt = new Date(iso+'T00:00:00');
+  const dateLbl = dt.toLocaleDateString('bg-BG', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const list = events.map(ev => {
+    const plat = HUB_PLATFORM_BY_V[ev.platform] || { color:'#6b779e', l:'Unknown' };
+    const isMultiDay = (ev.endDate && ev.endDate !== ev.date);
+    const startD = new Date(ev.date+'T00:00:00');
+    const endD = new Date((ev.endDate||ev.date)+'T00:00:00');
+    const rangeStr = isMultiDay
+      ? `${startD.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})} – ${endD.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})}`
+      : '';
+    return `<div class="hub-evt-row" onclick="editEvent('${ev.id}')" style="cursor:pointer">
+      <div class="hub-evt-bar" style="background:${plat.color}"></div>
+      <div class="hub-evt-body">
+        <div class="hub-evt-title"><span class="hub-evt-platform" style="color:${plat.color}">${plat.l}</span></div>
+        <div class="hub-evt-meta">
+          ${rangeStr ? `<span>${rangeStr}</span>` : ''}
+          ${ev.trainer ? `<span>${rangeStr?'· ':''}${escapeHtml(ev.trainer)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  showModal({
+    size:'small',
+    title: dateLbl,
+    subtitle: `${events.length} training${events.length!==1?'s':''}`,
+    body: `<div style="display:flex;flex-direction:column;gap:8px">${list}</div>`,
+    actions: [
+      ...(editUnlocked ? [{ label:'Add another', class:'btn-navy', value:'add' }] : []),
+      { label:'Close', class:'btn-ghost-dark', value:'close' }
+    ]
+  }).then(act => { if (act === 'add') addEventOnDate(iso); });
+}
+
+function addEventOnDate(iso) {
+  if (!editUnlocked) { promptEditUnlock(); return; }
+  openEventModal(null, iso);
+}
+function editEvent(id) {
+  if (!editUnlocked) { promptEditUnlock(); return; }
+  openEventModal(id, null);
+}
+
+function openEventModal(eventId, defaultDate) {
+  const isEdit = !!eventId;
+  const ev = isEdit ? S.hub.events.find(e => e.id === eventId) : {
+    id: uid(),
+    date: defaultDate || (new Date()).toISOString().slice(0,10),
+    endDate: defaultDate || (new Date()).toISOString().slice(0,10),
+    platform:'dim_sw', trainer:'',
+    trainees: [],   // now array of strings (free text names)
+    note:''
+  };
+  if (!ev) return;
+
+  // Backwards-compat: events created before this version may have trainees as IDs
+  // and may have startTime/endTime. We keep those keys but ignore them visually.
+  // Trainees: convert any ID-shaped entries to names if we can resolve them.
+  const allTrainees = [...S.trainees, ...S.archived];
+  const traineeNames = (ev.trainees || []).map(entry => {
+    // If it looks like a stored ID and resolves to a known trainee, use name
+    const found = allTrainees.find(t => t.id === entry);
+    return found ? (found.name || 'Unnamed') : entry;
+  }).filter(n => n && String(n).trim());
+  // Default endDate fallback to start date if missing
+  if (!ev.endDate) ev.endDate = ev.date;
+
+  const platOpts = HUB_PLATFORMS.map(p => `<option value="${p.v}" ${p.v===ev.platform?'selected':''}>${p.l}</option>`).join('');
+
+  return new Promise(resolve => {
+    const host = document.getElementById('modal-host');
+    let resolved = false;
+    const cleanup = () => {
+      host.innerHTML = '';
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', onKey);
+    };
+    const finish = (val) => { if (resolved) return; resolved = true; cleanup(); resolve(val); };
+    const onKey = (e) => { if (e.key==='Escape') finish(false); };
+
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+
+    host.innerHTML = `
+    <div class="mdl-back" id="mdl-back">
+      <div class="mdl-card mdl-large" role="dialog" onclick="event.stopPropagation()" style="max-width:640px">
+        <div class="mdl-hd">
+          <div>
+            <div class="mdl-sub">${isEdit?'Edit training':'New training'}</div>
+            <div class="mdl-title">${isEdit?'Update <em>training</em>':'Schedule a <em>training</em>'}</div>
+          </div>
+          <button class="mdl-x" id="mdl-x">✕</button>
+        </div>
+        <div class="mdl-bd">
+          <div class="evt-grid">
+            <div>
+              <label class="field-lbl">Start Date</label>
+              <input type="date" class="setup-input" id="ev-date" value="${ev.date}">
+            </div>
+            <div>
+              <label class="field-lbl">End Date</label>
+              <input type="date" class="setup-input" id="ev-end-date" value="${ev.endDate||ev.date}">
+            </div>
+            <div>
+              <label class="field-lbl">Platform</label>
+              <select class="setup-input" id="ev-platform">${platOpts}</select>
+            </div>
+            <div>
+              <label class="field-lbl">Trainer</label>
+              <input type="text" class="setup-input" id="ev-trainer" placeholder="Trainer name…" value="${escapeAttr(ev.trainer||'')}">
+            </div>
+          </div>
+          <div style="margin-top:18px">
+            <label class="field-lbl">Trainees attending <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted2)">(optional)</span></label>
+            <div class="evt-trainees-list" id="ev-trainees-list"></div>
+            <button type="button" class="btn btn-ghost-dark" id="ev-add-trainee" style="margin-top:8px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add trainee
+            </button>
+          </div>
+        </div>
+        <div class="mdl-ft">
+          ${isEdit ? `<button class="btn btn-danger" id="btn-del">Delete</button>` : ''}
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost-dark" id="btn-cancel">Cancel</button>
+          <button class="btn btn-navy" id="btn-save">${isEdit?'Save':'Create'}</button>
+        </div>
+      </div>
+    </div>`;
+
+    const listEl = document.getElementById('ev-trainees-list');
+    const renderTraineeRows = (names) => {
+      if (!names.length) {
+        listEl.innerHTML = `<div class="hub-empty" style="margin:0;padding:14px">No trainees added yet.</div>`;
+        return;
+      }
+      listEl.innerHTML = names.map((n, i) => `
+        <div class="evt-trainee-row">
+          <input type="text" class="setup-input evt-trainee-input" data-idx="${i}" placeholder="Trainee name…" value="${escapeAttr(n)}">
+          <button type="button" class="evt-trainee-rm" data-idx="${i}" title="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`).join('');
+      // Wire up remove buttons
+      listEl.querySelectorAll('.evt-trainee-rm').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          // Capture current input values before re-render
+          const cur = [...listEl.querySelectorAll('.evt-trainee-input')].map(i => i.value);
+          cur.splice(idx, 1);
+          renderTraineeRows(cur);
+        });
+      });
+    };
+    renderTraineeRows(traineeNames);
+
+    document.getElementById('ev-add-trainee').addEventListener('click', () => {
+      const cur = [...listEl.querySelectorAll('.evt-trainee-input')].map(i => i.value);
+      cur.push('');
+      renderTraineeRows(cur);
+      // Focus the new (last) input
+      const inputs = listEl.querySelectorAll('.evt-trainee-input');
+      inputs[inputs.length-1]?.focus();
+    });
+
+    const save = () => {
+      const date = document.getElementById('ev-date').value;
+      const endDate = document.getElementById('ev-end-date').value || date;
+      const platform = document.getElementById('ev-platform').value;
+      const trainer = document.getElementById('ev-trainer').value.trim();
+      const trainees = [...listEl.querySelectorAll('.evt-trainee-input')]
+        .map(i => i.value.trim()).filter(Boolean);
+      if (!date) { toast('Start date is required', 'warn'); return; }
+      if (endDate < date) { toast('End date cannot be before start date', 'warn'); return; }
+      if (!platform) { toast('Platform is required', 'warn'); return; }
+      const next = { ...ev, date, endDate, platform, trainer, trainees };
+      // Strip legacy time fields if they exist
+      delete next.startTime; delete next.endTime;
+      if (isEdit) {
+        const idx = S.hub.events.findIndex(e => e.id === ev.id);
+        if (idx >= 0) S.hub.events[idx] = next;
+      } else {
+        S.hub.events.push(next);
+      }
+      dirty();
+      renderHubCalendar();
+      finish(true);
+      toast(isEdit?'Training updated':'Training added', 'ok');
+    };
+
+    document.getElementById('btn-save').addEventListener('click', save);
+    document.getElementById('btn-cancel').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-x').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-back').addEventListener('click', e => { if (e.target.id==='mdl-back') finish(false); });
+    if (isEdit) {
+      document.getElementById('btn-del').addEventListener('click', async () => {
+        cleanup(); resolved = true;
+        const ok = await confirmModal(
+          `Delete this <strong>${(HUB_PLATFORM_BY_V[ev.platform]||{}).l||'training'}</strong> on ${ev.date}?`,
+          { title:'Delete training?', confirmLabel:'Delete', confirmClass:'btn-danger' }
+        );
+        if (!ok) { openEventModal(eventId, null); resolve(false); return; }
+        S.hub.events = S.hub.events.filter(e => e.id !== ev.id);
+        dirty();
+        renderHubCalendar();
+        toast('Training deleted', 'ok');
+        resolve(true);
+      });
+    }
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+/* ───── MATERIALS ───── */
+function renderHubMaterials() {
+  const host = document.getElementById('hub-content');
+  if (!host) return;
+  const filterTag = S.hub._matFilter || '';
+  const filterType = S.hub._matFilterType || '';
+  const list = S.hub.materials.filter(m => {
+    if (filterTag && !(m.tags||[]).includes(filterTag)) return false;
+    if (filterType && m.type !== filterType) return false;
+    return true;
+  }).sort((a,b) => (b.added||'').localeCompare(a.added||''));
+
+  const tagOpts = `<option value="">All tags</option>` + HUB_MTAGS.map(t =>
+    `<option value="${t.v}" ${filterTag===t.v?'selected':''}>${t.l}</option>`).join('');
+  const typeOpts = `<option value="">All types</option>` + HUB_MTYPES.map(t =>
+    `<option value="${t.v}" ${filterType===t.v?'selected':''}>${t.l}</option>`).join('');
+
+  const cards = list.length === 0
+    ? `<div class="hub-empty">No materials${filterTag||filterType?' match the filter':''}. ${editUnlocked?'Click "Add Material" to start a library.':''}</div>`
+    : list.map(m => {
+        const type = HUB_MTYPES.find(t => t.v===m.type) || { l:'Other' };
+        const tagPills = (m.tags||[]).map(tg => {
+          const t = HUB_MTAGS.find(x => x.v===tg);
+          return t ? `<span class="mat-tag">${t.l}</span>` : '';
+        }).join('');
+        const typeIcon = matTypeIconSVG(m.type);
+        return `<div class="mat-card">
+          <div class="mat-icon">${typeIcon}</div>
+          <div class="mat-body">
+            <div class="mat-row1">
+              <a class="mat-title" href="${escapeAttr(m.url)}" target="_blank" rel="noopener">${m.title||'Untitled'}</a>
+              ${editUnlocked ? `<div class="mat-actions">
+                <button class="mat-act" onclick="editMaterial('${m.id}')" title="Edit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="mat-act mat-act-danger" onclick="deleteMaterial('${m.id}')" title="Delete">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </div>` : ''}
+            </div>
+            <div class="mat-meta">
+              <span class="mat-type">${type.l}</span>
+              ${m.addedBy?`<span>· ${m.addedBy}</span>`:''}
+              ${m.added?`<span>· ${m.added}</span>`:''}
+            </div>
+            ${m.description ? `<div class="mat-desc">${escapeHtml(m.description)}</div>` : ''}
+            ${tagPills ? `<div class="mat-tags">${tagPills}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+
+  host.innerHTML = `
+    <div class="mat-toolbar">
+      <select class="setup-input mat-filter" onchange="S.hub._matFilter=this.value;renderHubMaterials();">
+        ${tagOpts}
+      </select>
+      <select class="setup-input mat-filter" onchange="S.hub._matFilterType=this.value;renderHubMaterials();">
+        ${typeOpts}
+      </select>
+      <div style="flex:1"></div>
+      <span style="font-size:12px;color:var(--muted);font-weight:700">${list.length} item${list.length!==1?'s':''}</span>
+      <button class="btn btn-navy editor-only" onclick="addMaterial()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Material
+      </button>
+    </div>
+    <div class="mat-list">${cards}</div>`;
+}
+
+function matTypeIconSVG(t) {
+  const common = 'width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  switch (t) {
+    case 'doc':     return `<svg ${common}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`;
+    case 'video':   return `<svg ${common}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`;
+    case 'slides':  return `<svg ${common}><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+    case 'tool':    return `<svg ${common}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
+    case 'article': return `<svg ${common}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+    default:        return `<svg ${common}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+  }
+}
+
+function addMaterial() {
+  if (!editUnlocked) { promptEditUnlock(); return; }
+  openMaterialModal(null);
+}
+
+function editMaterial(id) {
+  if (!editUnlocked) { promptEditUnlock(); return; }
+  openMaterialModal(id);
+}
+
+async function deleteMaterial(id) {
+  if (!editUnlocked) { promptEditUnlock(); return; }
+  const m = S.hub.materials.find(x => x.id === id);
+  if (!m) return;
+  const ok = await confirmModal(
+    `Delete <strong>${escapeHtml(m.title||'this material')}</strong>? The link itself stays where it is — only the entry is removed.`,
+    { title:'Delete material?', confirmLabel:'Delete', confirmClass:'btn-danger' }
+  );
+  if (!ok) return;
+  S.hub.materials = S.hub.materials.filter(x => x.id !== id);
+  dirty(); renderHubMaterials();
+  toast('Material deleted', 'ok');
+}
+
+function openMaterialModal(matId) {
+  const isEdit = !!matId;
+  const m = isEdit ? S.hub.materials.find(x => x.id === matId) : {
+    id: uid(), title:'', url:'', type:'doc', tags:[], description:'',
+    addedBy:'', added: (new Date()).toISOString().slice(0,10)
+  };
+  if (!m) return;
+
+  const typeOpts = HUB_MTYPES.map(t => `<option value="${t.v}" ${t.v===m.type?'selected':''}>${t.l}</option>`).join('');
+  const tagChecks = HUB_MTAGS.map(t => `<label class="evt-trainee-chk">
+    <input type="checkbox" value="${t.v}" ${(m.tags||[]).includes(t.v)?'checked':''}>
+    <span>${t.l}</span>
+  </label>`).join('');
+
+  return new Promise(resolve => {
+    const host = document.getElementById('modal-host');
+    let resolved = false;
+    const cleanup = () => {
+      host.innerHTML = '';
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', onKey);
+    };
+    const finish = (val) => { if (resolved) return; resolved = true; cleanup(); resolve(val); };
+    const onKey = (e) => { if (e.key==='Escape') finish(false); };
+
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+
+    host.innerHTML = `
+    <div class="mdl-back" id="mdl-back">
+      <div class="mdl-card mdl-large" role="dialog" onclick="event.stopPropagation()" style="max-width:580px">
+        <div class="mdl-hd">
+          <div>
+            <div class="mdl-sub">${isEdit?'Edit material':'New material'}</div>
+            <div class="mdl-title">${isEdit?'Update <em>material</em>':'Add a <em>material</em>'}</div>
+          </div>
+          <button class="mdl-x" id="mdl-x">✕</button>
+        </div>
+        <div class="mdl-bd">
+          <div style="margin-bottom:14px">
+            <label class="field-lbl">Title</label>
+            <input type="text" class="setup-input" id="m-title" placeholder="What is it?" value="${escapeAttr(m.title||'')}">
+          </div>
+          <div style="margin-bottom:14px">
+            <label class="field-lbl">URL</label>
+            <input type="url" class="setup-input" id="m-url" placeholder="https://…" value="${escapeAttr(m.url||'')}">
+          </div>
+          <div class="evt-grid" style="margin-bottom:14px">
+            <div>
+              <label class="field-lbl">Type</label>
+              <select class="setup-input" id="m-type">${typeOpts}</select>
+            </div>
+            <div>
+              <label class="field-lbl">Added by</label>
+              <input type="text" class="setup-input" id="m-by" placeholder="Optional" value="${escapeAttr(m.addedBy||'')}">
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label class="field-lbl">Tags</label>
+            <div class="evt-trainees">${tagChecks}</div>
+          </div>
+          <div>
+            <label class="field-lbl">Description <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted2)">(optional)</span></label>
+            <textarea class="note-ta" id="m-desc" placeholder="Why is this useful…" style="min-height:74px">${escapeHtml(m.description||'')}</textarea>
+          </div>
+        </div>
+        <div class="mdl-ft">
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost-dark" id="btn-cancel">Cancel</button>
+          <button class="btn btn-navy" id="btn-save">${isEdit?'Save':'Add'}</button>
+        </div>
+      </div>
+    </div>`;
+
+    const save = () => {
+      const title = document.getElementById('m-title').value.trim();
+      const url = document.getElementById('m-url').value.trim();
+      if (!title) { toast('Title is required', 'warn'); return; }
+      if (!url)   { toast('URL is required', 'warn'); return; }
+      const next = {
+        ...m, title, url,
+        type: document.getElementById('m-type').value,
+        addedBy: document.getElementById('m-by').value.trim(),
+        tags: [...host.querySelectorAll('.evt-trainee-chk input:checked')].map(c => c.value),
+        description: document.getElementById('m-desc').value
+      };
+      if (isEdit) {
+        const idx = S.hub.materials.findIndex(x => x.id === m.id);
+        if (idx >= 0) S.hub.materials[idx] = next;
+      } else {
+        S.hub.materials.unshift(next);
+      }
+      dirty(); renderHubMaterials();
+      finish(true);
+      toast(isEdit?'Material updated':'Material added', 'ok');
+    };
+
+    document.getElementById('btn-save').addEventListener('click', save);
+    document.getElementById('btn-cancel').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-x').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-back').addEventListener('click', e => { if (e.target.id==='mdl-back') finish(false); });
+    document.addEventListener('keydown', onKey);
+    setTimeout(() => document.getElementById('m-title').focus(), 30);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+function escapeAttr(s) { return escapeHtml(s); }
 
 /* ══════════════════════════════════════════════════════
    TRAINEE MANAGEMENT
@@ -1564,8 +2440,15 @@ function goWeek(id) {
   document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`panel-${id}`)?.classList.add('active');
   document.querySelector(`[data-tab="${id}"]`)?.classList.add('active');
-  if (id==='ov') renderOverview();
+  // Hide trainee-specific UI on global tabs (ov/arch/hub) — setup card is for the active trainee
+  const isGlobal = (id==='ov' || id==='arch' || id==='hub');
+  const noTraineeBar = (id==='hub' || id==='arch');
+  document.getElementById('setup-outer').style.display    = isGlobal ? 'none' : '';
+  document.querySelector('.trainee-bar-outer').style.display = noTraineeBar ? 'none' : '';
+  document.body.classList.toggle('no-trainee-bar', noTraineeBar);
+  if (id==='ov')   renderOverview();
   if (id==='arch') renderArchive();
+  if (id==='hub')  renderHub();
 }
 
 /* ══════════════════════════════════════════════════════
