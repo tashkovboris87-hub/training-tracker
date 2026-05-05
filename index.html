@@ -698,7 +698,7 @@ body.readonly .editor-only { display:none !important; }
 .hub-stab {
   display:flex; align-items:center; gap:7px;
   padding:8px 16px; border:none; background:transparent; cursor:pointer;
-  font-family:'Nunito',sans-serif; font-size:13px; font-weight:700;
+  font-family:var(--font); font-size:13px; font-weight:500;
   color:var(--muted); border-radius:7px; transition:all .15s;
 }
 .hub-stab:hover { color:var(--navy); }
@@ -722,13 +722,13 @@ body.readonly .editor-only { display:none !important; }
 }
 .cal-nav-btn:hover { background:var(--navy-tint); border-color:var(--navy); }
 .cal-month-lbl {
-  font-family:'Nunito',sans-serif; font-size:18px; font-weight:900;
+  font-family:var(--font); font-size:18px; font-weight:600;
   color:var(--navy); min-width:200px; text-align:center; text-transform:capitalize;
 }
 .cal-today-btn {
   padding:6px 14px; border-radius:7px; border:1px solid var(--border-m);
   background:var(--surface); cursor:pointer;
-  font-family:'Nunito',sans-serif; font-size:12px; font-weight:700; color:var(--muted);
+  font-family:var(--font); font-size:12px; font-weight:500; color:var(--muted);
   transition:all .15s;
 }
 .cal-today-btn:hover { background:var(--navy-tint); color:var(--navy); border-color:var(--navy); }
@@ -741,39 +741,64 @@ body.readonly .editor-only { display:none !important; }
 }
 .cal-dayname {
   background:var(--navy-tint); padding:9px 6px; text-align:center;
-  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+  font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
 }
 .cal-cell {
-  background:var(--surface); min-height:96px; padding:6px 7px;
+  background:var(--surface); min-height:96px; padding:6px 0; /* zero horizontal padding to allow events to span full width */
   cursor:pointer; transition:background .12s; position:relative;
 }
+.cal-cell-num,
+.cal-cell-events { padding-left:7px; padding-right:7px; }
 .cal-cell:hover { background:rgba(0,196,208,.05); }
 .cal-cell.oom { background:#fafbfd; }
 .cal-cell.oom .cal-cell-num { color:var(--muted2); }
+/* Weekend background (only for in-month cells; oom takes priority) */
+.cal-cell.weekend:not(.oom) { background:#f3f4f7; }
+/* Holiday background (overrides weekend if both apply) */
+.cal-cell.holiday:not(.oom) { background:#fde8eb; }
+.cal-cell.weekend.holiday:not(.oom) { background:#fde8eb; }
 .cal-cell.today { background:rgba(0,196,208,.07); }
-.cal-cell.today .cal-cell-num {
-  background:var(--teal); color:#fff;
-  width:22px; height:22px; border-radius:50%;
-  display:inline-flex; align-items:center; justify-content:center;
+/* Today + holiday: keep today indicator priority */
+.cal-cell.today.holiday:not(.oom) { background:linear-gradient(135deg, rgba(0,196,208,.07), #fde8eb); }
+
+.cal-cell-holiday {
+  font-size:9.5px; font-weight:600; color:#b14048;
+  padding:0 9px; margin-bottom:3px; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.cal-cell-num { font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; color:var(--navy); margin-bottom:4px; display:inline-block; line-height:1; }
-.cal-cell-events { display:flex; flex-direction:column; gap:2px; }
+/* Today indicator: small teal dot before number, no circle around */
+.cal-cell.today .cal-cell-num {
+  color:var(--teal-deep); font-weight:700;
+  position:relative;
+}
+.cal-cell.today .cal-cell-num::before {
+  content:''; position:absolute; left:-2px; top:50%; transform:translateY(-50%);
+  width:4px; height:4px; border-radius:50%; background:var(--teal);
+}
+.cal-cell-num { font-family:var(--font); font-size:12px; font-weight:600; color:var(--navy); margin-bottom:4px; display:inline-block; line-height:1; padding-left:9px; }
+.cal-cell-events { display:flex; flex-direction:column; gap:2px; padding-left:0; padding-right:0; }
 .cal-evt {
-  padding:3px 6px; border-radius:4px;
-  font-size:10.5px; font-weight:700; color:var(--navy); cursor:pointer;
+  padding:3px 6px;
+  font-size:10.5px; font-weight:500; color:var(--navy); cursor:pointer;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   display:flex; align-items:center; gap:5px;
-  transition:background .12s;
+  transition:filter .12s;
+  border-radius:0;
+  /* Extend slightly past cell edges so segments visually meet across day borders */
+  margin-right:-1px;
+  position:relative;
 }
+.cal-evt.seg-left { border-top-left-radius:4px; border-bottom-left-radius:4px; margin-left:4px; }
+.cal-evt.seg-right { border-top-right-radius:4px; border-bottom-right-radius:4px; margin-right:4px; }
 .cal-evt:hover { filter:brightness(.95); }
-.cal-evt-time { font-weight:800; opacity:.8; flex-shrink:0; font-size:9.5px; }
+.cal-evt-time { font-weight:600; opacity:.8; flex-shrink:0; font-size:9.5px; }
 .cal-evt-name { overflow:hidden; text-overflow:ellipsis; }
-.cal-evt-more { font-size:10px; font-weight:700; color:var(--teal-deep); padding:2px 6px; cursor:pointer; }
+.cal-evt-more { font-size:10px; font-weight:500; color:var(--teal-deep); padding:2px 6px; cursor:pointer; }
 .cal-evt-more:hover { text-decoration:underline; }
 
 /* Event list under calendar */
 .cal-list-hd {
-  margin:24px 0 10px; font-size:11px; font-weight:800; text-transform:uppercase;
+  margin:24px 0 10px; font-size:11px; font-weight:600; text-transform:uppercase;
   letter-spacing:.08em; color:var(--muted);
 }
 .cal-list { display:flex; flex-direction:column; gap:9px; }
@@ -789,12 +814,12 @@ body.readonly .editor-only { display:none !important; }
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   border-right:1px solid var(--border); min-width:64px;
 }
-.hub-evt-day { font-family:'Nunito',sans-serif; font-size:22px; font-weight:900; color:var(--navy); line-height:1; }
-.hub-evt-mo { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-top:2px; }
+.hub-evt-day { font-family:var(--font); font-size:22px; font-weight:600; color:var(--navy); line-height:1; }
+.hub-evt-mo { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-top:2px; }
 .hub-evt-bar { width:4px; flex-shrink:0; }
 .hub-evt-body { padding:11px 14px; flex:1; min-width:0; }
-.hub-evt-title { font-family:'Nunito',sans-serif; font-size:14px; font-weight:800; margin-bottom:4px; }
-.hub-evt-platform { font-weight:800; }
+.hub-evt-title { font-family:var(--font); font-size:14px; font-weight:600; margin-bottom:4px; }
+.hub-evt-platform { font-weight:600; }
 .hub-evt-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--muted); font-weight:600; }
 .hub-evt-meta span { display:inline-flex; align-items:center; gap:5px; }
 
@@ -825,7 +850,7 @@ body.readonly .editor-only { display:none !important; }
 }
 .evt-trainee-chk {
   display:flex; align-items:center; gap:7px; padding:5px 8px; cursor:pointer;
-  font-size:12.5px; font-weight:700; color:var(--navy); border-radius:6px;
+  font-size:12.5px; font-weight:500; color:var(--navy); border-radius:6px;
   transition:background .12s;
 }
 .evt-trainee-chk:hover { background:rgba(25,33,102,.06); }
@@ -851,7 +876,7 @@ body.readonly .editor-only { display:none !important; }
 .mat-body { flex:1; min-width:0; }
 .mat-row1 { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .mat-title {
-  font-family:'Nunito',sans-serif; font-size:14px; font-weight:800;
+  font-family:var(--font); font-size:14px; font-weight:600;
   color:var(--navy); text-decoration:none; line-height:1.4;
 }
 .mat-title:hover { color:var(--teal-deep); text-decoration:underline; }
@@ -864,13 +889,13 @@ body.readonly .editor-only { display:none !important; }
 .mat-act:hover { background:var(--navy-tint); color:var(--navy); }
 .mat-act-danger:hover { background:var(--red-tint); color:var(--red); }
 .mat-meta { font-size:11px; font-weight:600; color:var(--muted); margin-top:2px; }
-.mat-meta .mat-type { color:var(--teal-deep); font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-size:10px; }
+.mat-meta .mat-type { color:var(--teal-deep); font-weight:600; text-transform:uppercase; letter-spacing:.05em; font-size:10px; }
 .mat-desc { font-size:12.5px; color:var(--navy); line-height:1.5; margin-top:6px; }
 .mat-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
 .mat-tag {
   padding:2px 8px; border-radius:10px;
   background:var(--teal-tint); color:var(--teal-deep);
-  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em;
+  font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
 }
 
 @media(max-width:700px) {
@@ -1157,7 +1182,110 @@ const RATINGS = [
 ];
 const SCORE = {exceptional:95,no_concern:75,attention:55,cause_concern:35,not_applicable:75,paid_leave:60,sick_leave:60,holidays:60};
 
-/* ── HUB: PLATFORMS & MATERIAL TYPES ─────────────── */
+/* ───── HOLIDAYS (Bulgarian) ───── */
+// КТ чл. 154 — Bulgarian official public holidays.
+// Computus (Meeus / Orthodox Easter algorithm) + fixed-date holidays.
+function _orthodoxEaster(year) {
+  // Returns {month, day} of Orthodox Easter Sunday (Gregorian calendar).
+  const a = year % 4;
+  const b = year % 7;
+  const c = year % 19;
+  const d = (19*c + 15) % 30;
+  const e = (2*a + 4*b - d + 34) % 7;
+  const julianMonth = Math.floor((d + e + 114) / 31); // 3=March, 4=April
+  const julianDay = ((d + e + 114) % 31) + 1;
+  // Convert Julian to Gregorian (add 13 days for 1900-2099)
+  const j = new Date(Date.UTC(year, julianMonth - 1, julianDay));
+  j.setUTCDate(j.getUTCDate() + 13);
+  return { month: j.getUTCMonth() + 1, day: j.getUTCDate() };
+}
+
+function _bgFixedHolidays(year) {
+  // Returns ISO date strings for fixed holidays
+  const list = [
+    [1, 1,   "Нова година"],
+    [3, 3,   "Освобождение на България"],
+    [5, 1,   "Ден на труда"],
+    [5, 6,   "Гергьовден"],
+    [5, 24,  "Св. св. Кирил и Методий"],
+    [9, 6,   "Съединение"],
+    [9, 22,  "Независимост"],
+    [12, 24, "Бъдни вечер"],
+    [12, 25, "Рождество Христово"],
+    [12, 26, "Рождество Христово"],
+  ];
+  return list.map(([m, d, name]) => ({
+    iso: `${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
+    name
+  }));
+}
+
+function _bgEasterHolidays(year) {
+  const easter = _orthodoxEaster(year);
+  const easterSun = new Date(Date.UTC(year, easter.month - 1, easter.day));
+  const goodFri = new Date(easterSun); goodFri.setUTCDate(easterSun.getUTCDate() - 2);
+  const easterMon = new Date(easterSun); easterMon.setUTCDate(easterSun.getUTCDate() + 1);
+  const fmt = d => `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+  return [
+    { iso: fmt(goodFri),   name: "Велики Петък" },
+    { iso: fmt(easterSun), name: "Великден" },
+    { iso: fmt(easterMon), name: "Велики Понеделник" },
+  ];
+}
+
+// Cache (year → Map of iso → {name, observed?})
+const _holidayCache = {};
+function bgHolidaysForYear(year) {
+  if (_holidayCache[year]) return _holidayCache[year];
+  const all = [..._bgFixedHolidays(year), ..._bgEasterHolidays(year)];
+  // Build map of "real" holidays
+  const map = new Map();
+  all.forEach(h => map.set(h.iso, { name: h.name, observed: false }));
+  // Apply КТ чл. 154 ал. 2 — if a holiday falls on Sat/Sun, the next working day is also off.
+  // Rule: roll forward through weekend(s) AND already-marked holidays until a free workday.
+  const isoToD = iso => new Date(iso + 'T00:00:00');
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const wknd = iso => { const dow = isoToD(iso).getDay(); return dow === 0 || dow === 6; };
+  // Iterate over real holidays sorted; observed days append
+  const observedAdds = [];
+  [...map.entries()].sort(([a],[b]) => a.localeCompare(b)).forEach(([iso, info]) => {
+    if (!wknd(iso)) return;
+    // Find next working day that is neither weekend nor an existing holiday/observed
+    const d = isoToD(iso);
+    let safety = 0;
+    while (safety < 14) {
+      d.setDate(d.getDate() + 1);
+      const candidate = fmt(d);
+      if (!wknd(candidate) && !map.has(candidate) && !observedAdds.some(o => o.iso === candidate)) {
+        observedAdds.push({ iso: candidate, name: info.name + ' (observed)', observed: true });
+        break;
+      }
+      safety++;
+    }
+  });
+  observedAdds.forEach(o => map.set(o.iso, { name: o.name, observed: true }));
+  _holidayCache[year] = map;
+  return map;
+}
+
+function bgHolidayInfo(iso) {
+  if (!iso) return null;
+  const year = parseInt(iso.slice(0, 4), 10);
+  if (isNaN(year)) return null;
+  const map = bgHolidaysForYear(year);
+  return map.get(iso) || null;
+}
+
+function bgIsDayOff(iso) {
+  // Day off = weekend OR holiday (real) OR observed holiday rollover
+  if (!iso) return false;
+  const d = new Date(iso + 'T00:00:00');
+  const dow = d.getDay();
+  if (dow === 0 || dow === 6) return true;
+  return !!bgHolidayInfo(iso);
+}
+
+
 const HUB_PLATFORMS = [
   { v:'dim_sw',  l:'Dimensions SW', short:'Dim SW',  color:'#192166' },  // navy
   { v:'ifld_sw', l:'iField SW',     short:'iFld SW', color:'#00C4D0' },  // teal
@@ -1734,7 +1862,7 @@ function hubMoveMonth(delta) {
 }
 
 function hubMonthLabel(d) {
-  return d.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
 function renderHubCalendar() {
@@ -1756,24 +1884,53 @@ function renderHubCalendar() {
     cells.push(d);
   }
 
-  // Index events by date — events spanning multiple days appear on every day in [date, endDate]
-  const eventsByDay = {};
+  // Index events by date — events spanning multiple days appear on every weekday in [date, endDate]
+  // Segment info: which is the LEFT-edge (week-start or event-start), RIGHT-edge (week-end or event-end)
+  const eventsByDay = {}; // iso -> [{ ev, isStart, isEnd, isLeftEdge, isRightEdge }]
   const addDays = (iso, n) => {
     const d = new Date(iso + 'T00:00:00');
     d.setDate(d.getDate() + n);
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   };
+  const isoToDate = iso => new Date(iso + 'T00:00:00');
+  const isWeekend = iso => { const d = isoToDate(iso).getDay(); return d === 0 || d === 6; };
+  const dayOfWeek = iso => (isoToDate(iso).getDay() + 6) % 7; // Mon=0..Sun=6
+
   S.hub.events.forEach(ev => {
     const start = ev.date;
     const end = ev.endDate || ev.date;
     if (!start) return;
+    // Build the list of days this event covers — skip weekends and Bulgarian public holidays
+    // (including observed-day rollovers) for multi-day events
+    const isMultiDay = end > start;
     let cur = start;
     let safety = 0;
+    const days = [];
     while (cur <= end && safety < 365) {
-      (eventsByDay[cur] = eventsByDay[cur] || []).push(ev);
+      // For multi-day events, exclude days off (weekends + holidays)
+      // For single-day events, render exactly on the chosen day even if weekend/holiday
+      if (!isMultiDay || !bgIsDayOff(cur)) {
+        days.push(cur);
+      }
       cur = addDays(cur, 1);
       safety++;
     }
+    days.forEach((iso, i) => {
+      const isStart = (i === 0);
+      const isEnd = (i === days.length - 1);
+      // Segment edges: left edge if first occurrence in this week (Mon, or first day of event)
+      const dow = dayOfWeek(iso);
+      const prevIso = i > 0 ? days[i-1] : null;
+      // Continuous if previous day in days[] is exactly yesterday AND we're not at start of week
+      const prevWasYesterday = prevIso && (addDays(prevIso, 1) === iso);
+      const isLeftEdge = !prevWasYesterday || dow === 0;
+      const nextIso = i < days.length-1 ? days[i+1] : null;
+      const nextIsTomorrow = nextIso && (addDays(iso, 1) === nextIso);
+      const isRightEdge = !nextIsTomorrow || dow === 6;
+      (eventsByDay[iso] = eventsByDay[iso] || []).push({
+        ev, isStart, isEnd, isLeftEdge, isRightEdge, isMultiDay
+      });
+    });
   });
 
   const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1783,17 +1940,34 @@ function renderHubCalendar() {
     const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const inMonth = d.getMonth() === month;
     const isToday = d.getTime() === today.getTime();
+    const dow = d.getDay();
+    const isWknd = (dow === 0 || dow === 6);
+    const hol = bgHolidayInfo(iso);
+    const cellClasses = [
+      'cal-cell',
+      inMonth ? '' : 'oom',
+      isToday ? 'today' : '',
+      isWknd ? 'weekend' : '',
+      hol ? 'holiday' : '',
+    ].filter(Boolean).join(' ');
+    const holTitle = hol ? ` title="${escapeAttr(hol.name)}"` : '';
     const evts = eventsByDay[iso] || [];
-    const evtsHTML = evts.slice(0, 3).map(ev => {
+    const evtsHTML = evts.slice(0, 3).map(ent => {
+      const ev = ent.ev;
       const plat = HUB_PLATFORM_BY_V[ev.platform] || { color:'#6b779e', short:'?', l:'?' };
       const trainerShort = ev.trainer ? ' · ' + ev.trainer.split(' ')[0] : '';
-      return `<div class="cal-evt" style="background:${plat.color}1a;border-left:3px solid ${plat.color}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${escapeAttr(plat.l + (ev.trainer ? ' · ' + ev.trainer : ''))}">
-        <span class="cal-evt-name">${escapeHtml(plat.short || '—')}${escapeHtml(trainerShort)}</span>
+      // Only show label on the left-edge cell of each segment (so label doesn't repeat per day)
+      const showLabel = ent.isLeftEdge;
+      const segCls = (ent.isLeftEdge ? ' seg-left' : '') + (ent.isRightEdge ? ' seg-right' : '');
+      return `<div class="cal-evt${segCls}" style="background:${plat.color}1a;${ent.isLeftEdge ? `border-left:3px solid ${plat.color};` : ''}" onclick="event.stopPropagation();editEvent('${ev.id}')" title="${escapeAttr(plat.l + (ev.trainer ? ' · ' + ev.trainer : ''))}">
+        <span class="cal-evt-name">${showLabel ? escapeHtml(plat.short || '—') + escapeHtml(trainerShort) : '&nbsp;'}</span>
       </div>`;
     }).join('');
     const more = evts.length > 3 ? `<div class="cal-evt-more" onclick="event.stopPropagation();selectCalDay('${iso}')">+${evts.length-3} more</div>` : '';
-    return `<div class="cal-cell ${inMonth?'':'oom'} ${isToday?'today':''}" data-date="${iso}" onclick="addEventOnDate('${iso}')">
+    const holLabel = hol && inMonth ? `<div class="cal-cell-holiday" title="${escapeAttr(hol.name)}">${escapeHtml(hol.name)}</div>` : '';
+    return `<div class="${cellClasses}" data-date="${iso}"${holTitle} onclick="addEventOnDate('${iso}')">
       <div class="cal-cell-num">${d.getDate()}</div>
+      ${holLabel}
       <div class="cal-cell-events">${evtsHTML}${more}</div>
     </div>`;
   }).join('');
@@ -1813,12 +1987,12 @@ function renderHubCalendar() {
     : monthEvents.map(ev => {
         const plat = HUB_PLATFORM_BY_V[ev.platform] || { color:'#6b779e', l:'Unknown' };
         const dt = new Date(ev.date + 'T00:00:00');
-        const dateLbl = dt.toLocaleDateString('bg-BG', { weekday:'short', day:'numeric', month:'short' });
+        const dateLbl = dt.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' });
         const endDt = new Date((ev.endDate || ev.date) + 'T00:00:00');
         const isMultiDay = (ev.endDate && ev.endDate !== ev.date);
         const rangeStr = isMultiDay
-          ? `${dt.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})} – ${endDt.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})}`
-          : dt.toLocaleDateString('bg-BG',{day:'numeric',month:'short',year:'numeric'});
+          ? `${dt.toLocaleDateString('en-US',{day:'numeric',month:'short'})} – ${endDt.toLocaleDateString('en-US',{day:'numeric',month:'short'})}`
+          : dt.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
         const trainees = (ev.trainees || []).filter(n => n && String(n).trim());
         return `<div class="hub-evt-row" onclick="editEvent('${ev.id}')">
           <div class="hub-evt-date">
@@ -1877,14 +2051,14 @@ function selectCalDay(iso) {
     .sort((a,b) => a.date.localeCompare(b.date));
   if (events.length === 0) { addEventOnDate(iso); return; }
   const dt = new Date(iso+'T00:00:00');
-  const dateLbl = dt.toLocaleDateString('bg-BG', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const dateLbl = dt.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const list = events.map(ev => {
     const plat = HUB_PLATFORM_BY_V[ev.platform] || { color:'#6b779e', l:'Unknown' };
     const isMultiDay = (ev.endDate && ev.endDate !== ev.date);
     const startD = new Date(ev.date+'T00:00:00');
     const endD = new Date((ev.endDate||ev.date)+'T00:00:00');
     const rangeStr = isMultiDay
-      ? `${startD.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})} – ${endD.toLocaleDateString('bg-BG',{day:'numeric',month:'short'})}`
+      ? `${startD.toLocaleDateString('en-US',{day:'numeric',month:'short'})} – ${endD.toLocaleDateString('en-US',{day:'numeric',month:'short'})}`
       : '';
     return `<div class="hub-evt-row" onclick="editEvent('${ev.id}')" style="cursor:pointer">
       <div class="hub-evt-bar" style="background:${plat.color}"></div>
