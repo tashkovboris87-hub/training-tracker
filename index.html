@@ -736,8 +736,8 @@ body.readonly .editor-only { display:none !important; }
 /* Calendar grid */
 .cal-grid-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; box-shadow:0 1px 6px rgba(25,33,102,.05); }
 .cal-grid {
-  display:grid; grid-template-columns:repeat(7, 1fr); gap:0;
-  background:var(--border);
+  display:grid; grid-template-columns:repeat(7, 1fr); gap:1px;
+  background:rgba(25,33,102,.06);
 }
 .cal-dayname {
   background:var(--navy-tint); padding:9px 6px; text-align:center;
@@ -757,16 +757,13 @@ body.readonly .editor-only { display:none !important; }
 /* Holiday background (overrides weekend if both apply) */
 .cal-cell.holiday:not(.oom) { background:#fde8eb; }
 .cal-cell.weekend.holiday:not(.oom) { background:#fde8eb; }
-.cal-cell.today { background:rgba(0,196,208,.07); }
-/* Today + holiday: keep today indicator priority */
-.cal-cell.today.holiday:not(.oom) { background:linear-gradient(135deg, rgba(0,196,208,.07), #fde8eb); }
 
 .cal-cell-holiday {
   font-size:9.5px; font-weight:600; color:#b14048;
   padding:0 9px; margin-bottom:3px; line-height:1.2;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-/* Today indicator: small teal dot before number, no circle around */
+/* Today indicator: small teal dot before number — no background highlight */
 .cal-cell.today .cal-cell-num {
   color:var(--teal-deep); font-weight:700;
   position:relative;
@@ -785,7 +782,7 @@ body.readonly .editor-only { display:none !important; }
   transition:filter .12s;
   border-radius:0;
   /* Extend slightly past cell edges so segments visually meet across day borders */
-  margin-right:-1px;
+  margin-right:-2px;
   position:relative;
 }
 .cal-evt.seg-left { border-top-left-radius:4px; border-bottom-left-radius:4px; margin-left:4px; }
