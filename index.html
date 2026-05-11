@@ -356,6 +356,21 @@ body {
 .btn-restore { background:var(--green-tint); color:var(--green); border:1px solid rgba(61,158,74,.25); }
 .btn-restore:hover { background:rgba(61,158,74,.18); border-color:var(--green); }
 
+/* ── ICON BUTTONS (used in setup card actions) ── */
+.btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm); border: 1px solid var(--border-m);
+  background: var(--surface); cursor: pointer;
+  color: var(--muted);
+  transition: all .15s;
+}
+.btn-icon:hover { color: var(--navy); background: var(--navy-tint); border-color: var(--navy); }
+.btn-icon-archive { color: var(--amber); border-color: rgba(217,119,6,.22); background: var(--amber-tint); }
+.btn-icon-archive:hover { color: var(--amber); background: rgba(217,119,6,.18); border-color: var(--amber); }
+.btn-icon-danger { color: var(--red); border-color: rgba(228,0,58,.22); background: var(--red-tint); }
+.btn-icon-danger:hover { color: var(--red); background: rgba(228,0,58,.18); border-color: var(--red); }
+
 /* ── LEGACY: trainee-bar styles kept so old code that references them doesn't crash ── */
 .trainee-bar-outer { display: none; }
 .trainee-bar { display: none; }
@@ -406,18 +421,23 @@ body {
 }
 
 /* ── SETUP CARD ── */
-.setup-outer { max-width:var(--max); margin:0 auto; padding:14px 28px 0; }
+.setup-outer { margin:0; padding:18px 24px 0; }
 .setup-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 14px 18px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
-.setup-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; }
+.setup-field { flex: 1; min-width: 130px; }
+.setup-field-name { flex: 1.4; min-width: 160px; } /* Name slightly wider */
 .setup-actions {
-  display: flex; justify-content: flex-end; align-items: center;
-  margin-top: 12px; padding-top: 12px;
-  border-top: 1px solid var(--border); gap: 8px;
+  display: flex; align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
 }
 .setup-actions-empty { display:none; }
 
@@ -452,8 +472,8 @@ body.no-week-bar .week-bar-outer { display: none; }
 body.modal-open .week-bar-outer { visibility:hidden; }
 
 .week-bar {
-  max-width: var(--max); margin: 0 auto;
-  padding: 0 28px;
+  margin: 0;
+  padding: 0 24px;
   display: flex; gap: 0;
   overflow-x: auto; scrollbar-width: none;
   height: 42px; align-items: stretch;
@@ -478,7 +498,7 @@ body.modal-open .week-bar-outer { visibility:hidden; }
 .w-dot.concern { background:var(--red); }
 
 /* ── MAIN ── */
-.main { max-width:var(--max); margin:0 auto; padding:20px 28px 60px; }
+.main { margin:0; padding:20px 24px 60px; }
 .panel { display:none; }
 .panel.active { display:block; }
 
@@ -1294,37 +1314,37 @@ body.readonly .editor-only { display:none !important; }
 <!-- SETUP CARD -->
 <div class="setup-outer" id="setup-outer">
   <div class="setup-card">
-    <div class="setup-grid">
-      <div>
-        <label class="field-lbl">Trainee Name</label>
-        <input class="setup-input" id="f-name" type="text" placeholder="Enter full name…" oninput="syncSetup('name',this.value)">
-      </div>
-      <div>
-        <label class="field-lbl">Platform</label>
-        <select class="setup-input" id="f-platform" onchange="syncSetup('platform',this.value)">
-          <option value="dim_sw">Dimensions SW</option>
-          <option value="ifld_sw">iField SW</option>
-          <option value="dim_qa">Dimensions QA</option>
-          <option value="ifld_qa">iField QA</option>
-        </select>
-      </div>
-      <div>
-        <label class="field-lbl">Start Date</label>
-        <input class="setup-input" id="f-date" type="date" oninput="syncSetup('date',this.value)">
-      </div>
-      <div>
-        <label class="field-lbl">Trainer (Weeks 1–4)</label>
-        <input class="setup-input" id="f-trainer" type="text" placeholder="Trainer name…" oninput="syncSetup('trainer',this.value)">
-      </div>
-      <div>
-        <label class="field-lbl">Mentor (Weeks 5–8)</label>
-        <input class="setup-input" id="f-mentor" type="text" placeholder="Mentor name…" oninput="syncSetup('mentor',this.value)">
-      </div>
+    <div class="setup-field setup-field-name">
+      <label class="field-lbl">Trainee Name</label>
+      <input class="setup-input" id="f-name" type="text" placeholder="Enter full name…" oninput="syncSetup('name',this.value)">
+    </div>
+    <div class="setup-field">
+      <label class="field-lbl">Platform</label>
+      <select class="setup-input" id="f-platform" onchange="syncSetup('platform',this.value)">
+        <option value="dim_sw">Dimensions SW</option>
+        <option value="ifld_sw">iField SW</option>
+        <option value="dim_qa">Dimensions QA</option>
+        <option value="ifld_qa">iField QA</option>
+      </select>
+    </div>
+    <div class="setup-field">
+      <label class="field-lbl">Start Date</label>
+      <input class="setup-input" id="f-date" type="date" oninput="syncSetup('date',this.value)">
+    </div>
+    <div class="setup-field">
+      <label class="field-lbl">Trainer (Weeks 1–4)</label>
+      <input class="setup-input" id="f-trainer" type="text" placeholder="Trainer name…" oninput="syncSetup('trainer',this.value)">
+    </div>
+    <div class="setup-field">
+      <label class="field-lbl">Mentor (Weeks 5–8)</label>
+      <input class="setup-input" id="f-mentor" type="text" placeholder="Mentor name…" oninput="syncSetup('mentor',this.value)">
     </div>
     <div class="setup-actions" id="setup-actions">
-      <button class="btn btn-archive" onclick="askArchive()" title="Move this trainee to the Archive">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-        <span>Archive Trainee</span>
+      <button class="btn-icon btn-icon-archive editor-only" onclick="askArchive()" title="Archive this trainee">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      </button>
+      <button class="btn-icon btn-icon-danger editor-only" onclick="deleteActiveTrainee()" title="Delete this trainee permanently">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>
     </div>
   </div>
@@ -2807,6 +2827,23 @@ async function removeTrainee(e, id) {
   if (S.trainees.length === 0) { const nt=newTrainee(); S.trainees=[nt]; S.activeId=nt.id; }
   else if (S.activeId === id) S.activeId = S.trainees[0].id;
   dirty(); renderAll();
+}
+
+async function deleteActiveTrainee() {
+  if (!requireEdit()) return promptEditUnlock();
+  const t = active();
+  if (!t) return;
+  const name = t.name || 'this trainee';
+  const ok = await confirmModal(
+    `Permanently delete <strong>${escapeHtml(name)}</strong> and all their data? This cannot be undone.<br><br>If you only want to mark them as finished, use <strong>Archive</strong> instead — archived trainees are kept for reference.`,
+    { title:'Delete trainee?', confirmLabel:'Delete permanently', confirmClass:'btn-danger' }
+  );
+  if (!ok) return;
+  S.trainees = S.trainees.filter(x => x.id !== t.id);
+  if (S.trainees.length === 0) { const nt = newTrainee(); S.trainees = [nt]; S.activeId = nt.id; }
+  else if (S.activeId === t.id) S.activeId = S.trainees[0].id;
+  dirty(); renderAll();
+  toast('Trainee deleted', 'ok');
 }
 
 /* ══════════════════════════════════════════════════════
