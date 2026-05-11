@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scripting Training Tracker · Ipsos Bulgaria</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>
 window.FORM_DATA  = null;              // replaced on backup
 // Gist sync credentials are stored in localStorage per device (never in this file).
@@ -37,7 +37,7 @@ window.GIST_FILE  = (() => { try { return localStorage.getItem('tt3_gist_file') 
   --r-sm: 5px;
   --max:  1160px;
   --grad: linear-gradient(135deg,#192166 0%,#009EBD 55%,#00C4D0 100%);
-  --font: 'DM Sans', system-ui, sans-serif;
+  --font: 'Inter', system-ui, sans-serif;
   --mono: 'DM Mono', monospace;
 }
 
@@ -82,120 +82,169 @@ body {
   flex-direction: column;
 }
 
-/* ── SIDEBAR ── */
+/* ── SIDEBAR (canonical spec — also used in AI Radar and future tools) ── */
 .sidebar {
-  width: 240px;
+  width: 220px;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #192166 0%, #1d2d8c 35%, #1e8aa3 100%);
+  background: linear-gradient(160deg, #192166 0%, #1a3080 35%, #009EBD 80%, #00C4D0 100%);
   color: #fff;
-  position: sticky;
-  top: 0;
-  height: 100vh;
   display: flex;
   flex-direction: column;
+  height: 100vh;
   overflow: hidden;
+  position: sticky;
+  top: 0;
   z-index: 250;
+  font-family: 'Inter', sans-serif;
 }
+/* Subtle radial overlays for depth */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 120% 45% at 50% 0%, rgba(0,196,208,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 40% at 100% 100%, rgba(0,158,189,0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 0% 60%, rgba(25,33,102,0.35) 0%, transparent 70%);
+  z-index: 0;
+}
+.sidebar > * { position: relative; z-index: 1; }
 
+/* Header: logo + app name */
 .sb-hd {
-  display: flex; align-items: center; gap: 10px;
-  padding: 16px 16px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  height: 52px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  align-items: center;
+  gap: 9px;
   flex-shrink: 0;
 }
 .sb-logo {
-  width: 30px; height: 30px;
-  border-radius: 7px;
-  background: var(--teal);
+  width: 22px; height: 22px;
   display: flex; align-items: center; justify-content: center;
+  color: #00C4D0;
   flex-shrink: 0;
+  background: transparent;
+  border-radius: 0;
 }
 .sb-logo svg { display: block; }
 .sb-title {
-  font-family: var(--font);
-  font-size: 14px; font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  letter-spacing: -.2px;
+  line-height: 1.15;
 }
 .sb-sub {
-  font-size: 10.5px; font-weight: 500;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.38);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 1px;
 }
 .sb-close {
   margin-left: auto;
   background: transparent; border: none; color: #fff;
   cursor: pointer; padding: 4px;
-  display: none; /* hidden by default, shown on mobile */
+  display: none;
 }
 
-/* Sidebar nav */
+/* Scrollable nav area */
 .sb-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 10px 16px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.25) transparent;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .sb-nav::-webkit-scrollbar { width: 6px; }
-.sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius:3px; }
+.sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 3px; }
+.sb-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.20); }
 
+/* Section + section label (groupings like "VIEWS", "BY MODEL") */
 .sb-group {
-  margin-bottom: 18px;
+  padding: 12px 10px 4px;
 }
 .sb-group-hd {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 10px 6px;
-  font-size: 10.5px; font-weight: 700;
-  color: #fff;
+  padding: 0 8px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.28);
+  letter-spacing: .1em;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
 }
 .sb-group-count {
-  background: rgba(255,255,255,0.18);
-  border-radius: 9px;
-  padding: 1px 7px;
   font-size: 10px; font-weight: 700;
-  color: #fff;
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.65);
+  padding: 1px 7px;
+  border-radius: 9px;
+  min-width: 20px;
+  text-align: center;
+}
+.sb-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 4px 12px;
 }
 
+/* Nav items */
 .sb-item {
-  display: flex; align-items: center; gap: 9px;
+  display: flex; align-items: center; gap: 8px;
   padding: 7px 10px;
-  border-radius: 6px;
+  border-radius: 7px;
   cursor: pointer;
-  color: #fff;
-  font-size: 13px; font-weight: 500;
-  transition: background .12s, color .12s;
   background: transparent;
   border: none;
   width: 100%;
   text-align: left;
-  font-family: var(--font);
-  margin-bottom: 1px;
-}
-.sb-item:hover { background: rgba(255,255,255,0.1); }
-.sb-item.active {
-  background: rgba(255,255,255,0.18);
-  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
   font-weight: 600;
+  color: rgba(255,255,255,0.70);
+  transition: all .15s;
+  margin-bottom: 1px;
+  position: relative;
 }
-.sb-item .sb-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: rgba(255,255,255,0.6);
+.sb-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
 }
-.sb-item.active .sb-dot { background: var(--teal); box-shadow: 0 0 6px rgba(0,196,208,.7); }
+.sb-item.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  font-weight: 700;
+}
+.sb-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  background: #00C4D0;
+  border-radius: 0 2px 2px 0;
+}
 .sb-item .sb-icon {
-  width: 16px; height: 16px;
+  width: 15px; height: 15px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  color: #fff;
+  color: rgba(255,255,255,0.55);
 }
+.sb-item.active .sb-icon { color: #00C4D0; }
+.sb-item .sb-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.55);
+}
+.sb-item.active .sb-dot { background: #00C4D0; }
 .sb-item-label {
   flex: 1;
   overflow: hidden;
@@ -203,85 +252,120 @@ body {
   white-space: nowrap;
 }
 
+/* Optional "Add" button (dashed) */
 .sb-add-btn {
   display: flex; align-items: center; gap: 7px;
   padding: 7px 10px;
-  border-radius: 6px;
+  margin-top: 4px;
+  border-radius: 7px;
   cursor: pointer;
   background: transparent;
-  border: 1px dashed rgba(255,255,255,0.25);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 12px; font-weight: 500;
+  border: 1px dashed rgba(255,255,255,0.20);
+  color: rgba(255,255,255,0.70);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600;
   width: 100%;
-  margin-top: 4px;
   transition: all .12s;
 }
-.sb-add-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.4); }
+.sb-add-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.35); color: #fff; }
 
-/* Sidebar footer (status, lock, tools) */
+/* Sidebar footer */
 .sb-footer {
-  padding: 12px;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  background: rgba(0,0,0,0.18);
+  margin-top: auto;
+  padding: 12px 10px;
+  border-top: 1px solid rgba(255,255,255,0.07);
   flex-shrink: 0;
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: 6px;
 }
-.sb-status {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 11px; font-weight: 600;
+
+/* Icon-button row (Sync, Backup, etc.) */
+.sb-icon-row {
+  display: flex;
+  gap: 2px;
+  padding: 0 6px 6px;
+}
+.sb-icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
   color: #fff;
-  padding: 0 4px;
+  padding: 7px;
+  border-radius: 6px;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  opacity: 0.85;
 }
-.sb-status-dot {
+.sb-icon-btn:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.12);
+}
+
+/* User row */
+.sb-user-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.sb-user-row:hover { background: rgba(255,255,255,0.07); }
+.sb-user-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 800;
+  color: #192166;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.sb-user-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.sb-user-status {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px; font-weight: 400;
+  color: rgba(255,255,255,0.85);
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 1px;
+}
+.sb-user-status .sb-status-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
   background: rgba(255,255,255,0.35);
 }
-.sb-status-dot.saved { background: #5fffd5; box-shadow: 0 0 6px rgba(95,255,213,.5); }
-.sb-status-dot.saving { background: #fcd34d; animation: blink .5s infinite alternate; }
+.sb-user-status .sb-status-dot.saved { background: #5fffd5; box-shadow: 0 0 6px rgba(95,255,213,.5); }
+.sb-user-status .sb-status-dot.saving { background: #fcd34d; animation: blink .5s infinite alternate; }
 @keyframes blink { from{opacity:.4} to{opacity:1} }
 
+/* Lock pill in footer (keeps editor lock visible) */
 .sb-lock-btn {
   display: flex; align-items: center; gap: 7px;
   padding: 7px 10px;
-  border-radius: 6px;
+  margin: 0 6px 4px;
+  border-radius: 7px;
   cursor: pointer;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.18);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 11.5px; font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.85);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 600;
   transition: all .12s;
 }
-.sb-lock-btn:hover { background: rgba(255,255,255,0.18); }
-.sb-lock-btn.unlocked { background: rgba(0,196,208,0.22); border-color: rgba(0,196,208,0.5); color: #fff; }
+.sb-lock-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.sb-lock-btn.unlocked { background: rgba(0,196,208,0.18); border-color: rgba(0,196,208,0.40); color: #fff; }
 .sb-lock-btn .lock-status-dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: #ff8a8a; box-shadow: 0 0 6px rgba(255,138,138,.5);
 }
 .sb-lock-btn.unlocked .lock-status-dot { background: #5fffd5; box-shadow: 0 0 6px rgba(95,255,213,.6); }
-.sb-lock-btn .lock-icon { font-size: 12px; line-height: 1; }
-/* For compatibility: lock-pill class still expected by JS — alias to sb-lock-btn */
-.lock-pill { /* now styled via sb-lock-btn; keep this empty rule so JS toggles work */ }
-
-.sb-tools {
-  display: flex; gap: 6px;
-}
-.sb-tool-btn {
-  flex: 1;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 6px 8px;
-  border-radius: 5px;
-  cursor: pointer;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.14);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 11px; font-weight: 600;
-  transition: all .12s;
-}
-.sb-tool-btn:hover { background: rgba(255,255,255,0.16); }
+.sb-lock-btn .lock-icon { font-size: 11px; line-height: 1; }
+.lock-pill { /* JS-side alias; styling via .sb-lock-btn */ }
 
 /* Mobile topbar */
 .mobile-topbar {
@@ -1265,9 +1349,9 @@ body.readonly .editor-only { display:none !important; }
 <aside class="sidebar" id="sidebar">
   <div class="sb-hd">
     <div class="sb-logo">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <rect x="1" y="7" width="12" height="5" rx="1.5" fill="white" opacity="0.9"/>
-        <path d="M7 2L12.5 5.5L7 9L1.5 5.5L7 2Z" fill="white"/>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
       </svg>
     </div>
     <div>
@@ -1284,24 +1368,28 @@ body.readonly .editor-only { display:none !important; }
   </nav>
 
   <div class="sb-footer">
-    <div class="sb-status" id="sb-status">
-      <div class="sb-status-dot saved" id="as-dot"></div>
-      <span id="as-txt">Local only</span>
-    </div>
     <button class="sb-lock-btn" id="lock-pill" onclick="toggleEditLock()">
       <span class="lock-status-dot"></span>
       <span class="lock-icon">🔒</span>
       <span id="lock-pill-txt">Read only</span>
     </button>
-    <div class="sb-tools editor-only">
-      <button class="sb-tool-btn" id="sync-btn" onclick="setupGistCredentials()" title="Configure GitHub Gist sync (per device)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Sync
+    <div class="sb-icon-row editor-only">
+      <button class="sb-icon-btn" id="sync-btn" onclick="setupGistCredentials()" title="Configure GitHub Gist sync (per device)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       </button>
-      <button class="sb-tool-btn" onclick="saveHTML()" title="Download an offline backup copy">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Backup
+      <button class="sb-icon-btn" onclick="saveHTML()" title="Download an offline backup copy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </button>
+    </div>
+    <div class="sb-user-row">
+      <div class="sb-user-avatar">BT</div>
+      <div>
+        <div class="sb-user-name">Boris</div>
+        <div class="sb-user-status">
+          <span class="sb-status-dot saved" id="as-dot"></span>
+          <span id="as-txt">Local only</span>
+        </div>
+      </div>
     </div>
   </div>
 </aside>
