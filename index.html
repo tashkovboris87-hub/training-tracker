@@ -12,6 +12,8 @@ window.FORM_DATA  = null;              // replaced on backup
 window.GIST_TOKEN = (() => { try { return localStorage.getItem('tt3_gist_token'); } catch(e){ return null; } })();
 window.GIST_ID    = (() => { try { return localStorage.getItem('tt3_gist_id'); } catch(e){ return null; } })();
 window.GIST_FILE  = (() => { try { return localStorage.getItem('tt3_gist_file') || 'training-tracker.json'; } catch(e){ return 'training-tracker.json'; } })();
+// User display name (per device, used for audit log + sidebar avatar). Empty until first editor unlock.
+window.USER_NAME  = (() => { try { return localStorage.getItem('tt3_user_name') || ''; } catch(e){ return ''; } })();
 </script>
 <style>
 :root {
@@ -1120,6 +1122,57 @@ body.readonly .editor-only { display:none !important; }
 .evt-trainee-chk em { color:var(--muted2); font-size:10px; font-weight:600; font-style:normal; }
 
 /* Materials */
+/* Activity log panel */
+.act-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; flex-wrap: wrap;
+}
+.act-filter { width: auto; min-width: 140px; padding: 7px 10px; font-size: 12px; }
+.act-list { display: flex; flex-direction: column; gap: 6px; }
+.act-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.act-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800;
+  flex-shrink: 0;
+}
+.act-body { flex: 1; min-width: 0; }
+.act-line {
+  font-size: 13px; line-height: 1.45;
+  color: var(--navy);
+}
+.act-line strong { font-weight: 700; color: var(--navy); margin-right: 4px; }
+.act-verb {
+  color: var(--teal-deep);
+  font-weight: 600;
+  margin-right: 4px;
+}
+.act-target { color: var(--muted); font-weight: 500; }
+.act-meta {
+  font-size: 11px; font-weight: 500;
+  color: var(--muted2);
+  margin-top: 3px;
+}
+.act-empty {
+  padding: 30px 20px; text-align: center;
+  color: var(--muted); font-size: 13px; font-style: italic;
+  background: var(--bg2);
+  border: 1px dashed var(--border-m);
+  border-radius: var(--r-sm);
+}
+
+/* Sidebar user row pointer cursor */
+.sb-user-row { cursor: pointer; }
+
 .mat-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
 .mat-filter { width:auto; min-width:140px; padding:7px 10px; font-size:12px; }
 .mat-list { display:flex; flex-direction:column; gap:10px; }
@@ -1381,10 +1434,10 @@ body.readonly .editor-only { display:none !important; }
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </button>
     </div>
-    <div class="sb-user-row">
-      <div class="sb-user-avatar">BT</div>
+    <div class="sb-user-row" id="sb-user-row" onclick="editUserName()" title="Click to edit your name">
+      <div class="sb-user-avatar" id="sb-user-avatar">?</div>
       <div>
-        <div class="sb-user-name">Boris</div>
+        <div class="sb-user-name" id="sb-user-name">Set your name</div>
         <div class="sb-user-status">
           <span class="sb-status-dot saved" id="as-dot"></span>
           <span id="as-txt">Local only</span>
@@ -1715,7 +1768,8 @@ function emptyState() {
   const t = newTrainee();
   return {
     trainees:[t], activeId:t.id, activeWeek:'w1', archived: DEFAULT_ARCHIVED,
-    hub: { events: [], materials: [], hubTab: 'cal', calCursor: '' }
+    hub: { events: [], materials: [], hubTab: 'cal', calCursor: '' },
+    activity: []  // Rolling log of significant actions (cap 500, FIFO)
   };
 }
 
@@ -1766,7 +1820,68 @@ function applyMigrations(state) {
   if (!Array.isArray(state.hub.events))    state.hub.events = [];
   if (!Array.isArray(state.hub.materials)) state.hub.materials = [];
   if (!state.hub.hubTab) state.hub.hubTab = 'cal';
+  // Activity log — rolling list of significant actions (added in v3.18)
+  if (!Array.isArray(state.activity)) state.activity = [];
   return state;
+}
+
+/* ══════════════════════════════════════════════════════
+   USER IDENTITY + ACTIVITY LOG
+══════════════════════════════════════════════════════ */
+const ACTIVITY_CAP = 500;
+
+function currentUserName() {
+  return (window.USER_NAME || '').trim();
+}
+function userInitials(name) {
+  const n = String(name || '').trim();
+  if (!n) return '?';
+  // Take first letter of up to first two words (works for "Boris Tashkov" → BT, "Мария" → М)
+  const words = n.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return n.slice(0, 2).toUpperCase();
+}
+function setUserName(name) {
+  const clean = String(name || '').trim();
+  window.USER_NAME = clean;
+  try { localStorage.setItem('tt3_user_name', clean); } catch(e){}
+  // Refresh sidebar (avatar + name)
+  if (typeof renderSidebar === 'function') renderSidebar();
+}
+
+/**
+ * Log a significant action to the rolling activity log.
+ * @param {string} action - verb phrase ("added", "archived", "deleted", "edited", "restored")
+ * @param {string} target - what was acted on ("trainee Petya Vasileva", "training Dim SW · 5 May", etc.)
+ * @param {object} [meta] - optional metadata (not displayed, kept for future filtering)
+ */
+function logActivity(action, target, meta) {
+  if (!S.activity) S.activity = [];
+  const user = currentUserName() || 'Unknown';
+  const entry = {
+    id: uid(),
+    ts: Date.now(),
+    user,
+    action,
+    target,
+    meta: meta || null
+  };
+  S.activity.unshift(entry);
+  // FIFO cap — oldest entries fall off
+  while (S.activity.length > ACTIVITY_CAP) S.activity.pop();
+}
+
+function formatRelativeTime(ts) {
+  const now = Date.now();
+  const diff = Math.max(0, now - ts);
+  const min = Math.floor(diff / 60000);
+  if (min < 1)   return 'just now';
+  if (min < 60)  return `${min}m ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24)    return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7)     return `${d}d ago`;
+  return new Date(ts).toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' });
 }
 
 // Initial load — keep localStorage as offline fallback only
@@ -2004,6 +2119,13 @@ function buildHubPanel() {
   </div>`;
 }
 
+function buildActivityPanel() {
+  return `<div class="panel" id="panel-act">
+    <div class="week-hd"><div><div class="week-phase-lbl">Recent edits across the team</div><div class="week-title">Activity <em>log</em></div></div></div>
+    <div id="act-inner"></div>
+  </div>`;
+}
+
 /* ══════════════════════════════════════════════════════
    RENDER
 ══════════════════════════════════════════════════════ */
@@ -2059,6 +2181,11 @@ function renderSidebar() {
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
       <span class="sb-item-label">Trainer's Hub</span>
     </button>
+    <button class="sb-item${S.activeWeek==='act'?' active':''}" onclick="goWeek('act')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+      <span class="sb-item-label">Activity</span>
+      ${S.activity && S.activity.length ? `<span class="sb-group-count" style="margin-left:auto">${S.activity.length}</span>` : ''}
+    </button>
     <button class="sb-item${S.activeWeek==='arch'?' active':''}" onclick="goWeek('arch')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span>
       <span class="sb-item-label">Archive</span>
@@ -2084,9 +2211,24 @@ function renderSidebar() {
       ${addBtn}
     </div>
     ${workspace}`;
+
+  // Update sidebar footer avatar + name
+  const userName = currentUserName();
+  const avatarEl = document.getElementById('sb-user-avatar');
+  const nameEl   = document.getElementById('sb-user-name');
+  if (avatarEl) avatarEl.textContent = userInitials(userName);
+  if (nameEl) {
+    nameEl.textContent = userName || 'Set your name';
+    nameEl.style.opacity = userName ? '1' : '0.6';
+  }
 }
 
-function isGlobalView(w) { return w === 'ov' || w === 'arch' || w === 'hub'; }
+function editUserName() {
+  // Allow anyone to set/change their name (it's a per-device identity, not a permission)
+  promptUserName();
+}
+
+function isGlobalView(w) { return w === 'ov' || w === 'arch' || w === 'hub' || w === 'act'; }
 
 function switchTraineeFromSidebar(id) {
   // Switch to trainee AND go to a week panel (default w1 if current is a global view)
@@ -2122,7 +2264,7 @@ function renderMain() {
   const main = document.getElementById('main');
   const validWeek = WD.find(d=>d.id===S.activeWeek) || isGlobalView(S.activeWeek);
   if (!validWeek) S.activeWeek = 'w1';
-  const panels = WD.map((def, i) => buildWeekPanel(def, t, S.activeWeek===def.id || (i===0 && !WD.find(d=>d.id===S.activeWeek) && !isGlobalView(S.activeWeek)))).join('') + buildOverviewPanel() + buildHubPanel() + buildArchivePanel();
+  const panels = WD.map((def, i) => buildWeekPanel(def, t, S.activeWeek===def.id || (i===0 && !WD.find(d=>d.id===S.activeWeek) && !isGlobalView(S.activeWeek)))).join('') + buildOverviewPanel() + buildHubPanel() + buildActivityPanel() + buildArchivePanel();
   main.innerHTML = panels;
   // Restore active week tab state
   document.querySelectorAll('.week-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === S.activeWeek));
@@ -2136,6 +2278,7 @@ function renderMain() {
   if (S.activeWeek === 'ov')   renderOverview();
   if (S.activeWeek === 'arch') renderArchive();
   if (S.activeWeek === 'hub')  renderHub();
+  if (S.activeWeek === 'act')  renderActivity();
   // Apply visibility rules — hide setup + week-bar on global tabs (ov/arch/hub)
   const isGlobal = isGlobalView(S.activeWeek);
   const setupEl = document.getElementById('setup-outer');
@@ -2627,11 +2770,14 @@ function openEventModal(eventId, defaultDate) {
       const next = { ...ev, date, endDate, platform, trainer, trainees };
       // Strip legacy time fields if they exist
       delete next.startTime; delete next.endTime;
+      const platLbl = (HUB_PLATFORM_BY_V[platform] || {}).l || 'training';
       if (isEdit) {
         const idx = S.hub.events.findIndex(e => e.id === ev.id);
         if (idx >= 0) S.hub.events[idx] = next;
+        logActivity('edited', `training ${platLbl} · ${date}`);
       } else {
         S.hub.events.push(next);
+        logActivity('added', `training ${platLbl} · ${date}`);
       }
       dirty();
       renderHubCalendar();
@@ -2652,6 +2798,7 @@ function openEventModal(eventId, defaultDate) {
         );
         if (!ok) { openEventModal(eventId, null); resolve(false); return; }
         S.hub.events = S.hub.events.filter(e => e.id !== ev.id);
+        logActivity('deleted', `training ${(HUB_PLATFORM_BY_V[ev.platform]||{}).l||'training'} · ${ev.date}`);
         dirty();
         renderHubCalendar();
         toast('Training deleted', 'ok');
@@ -2763,6 +2910,7 @@ async function deleteMaterial(id) {
   );
   if (!ok) return;
   S.hub.materials = S.hub.materials.filter(x => x.id !== id);
+  logActivity('deleted', `material "${m.title || 'untitled'}"`);
   dirty(); renderHubMaterials();
   toast('Material deleted', 'ok');
 }
@@ -2857,8 +3005,10 @@ function openMaterialModal(matId) {
       if (isEdit) {
         const idx = S.hub.materials.findIndex(x => x.id === m.id);
         if (idx >= 0) S.hub.materials[idx] = next;
+        logActivity('edited', `material "${title}"`);
       } else {
         S.hub.materials.unshift(next);
+        logActivity('added', `material "${title}"`);
       }
       dirty(); renderHubMaterials();
       finish(true);
@@ -2888,6 +3038,7 @@ function addTrainee() {
   S.trainees.push(t);
   S.activeId = t.id;
   S.activeWeek = 'w1';
+  logActivity('added', 'a new trainee');
   dirty(); renderAll();
 }
 
@@ -2927,6 +3078,7 @@ async function deleteActiveTrainee() {
     { title:'Delete trainee?', confirmLabel:'Delete permanently', confirmClass:'btn-danger' }
   );
   if (!ok) return;
+  logActivity('deleted', `trainee ${name}`);
   S.trainees = S.trainees.filter(x => x.id !== t.id);
   if (S.trainees.length === 0) { const nt = newTrainee(); S.trainees = [nt]; S.activeId = nt.id; }
   else if (S.activeId === t.id) S.activeId = S.trainees[0].id;
@@ -3024,16 +3176,15 @@ function goWeek(id) {
   document.querySelectorAll('.week-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`panel-${id}`)?.classList.add('active');
   document.querySelector(`[data-tab="${id}"]`)?.classList.add('active');
-  // Hide setup card + week bar on global tabs (ov/arch/hub)
-  const isGlobal = (id==='ov' || id==='arch' || id==='hub');
+  // Hide setup card + week bar on global tabs (ov/arch/hub/act)
+  const isGlobal = isGlobalView(id);
   document.getElementById('setup-outer').style.display = isGlobal ? 'none' : '';
   document.body.classList.toggle('no-week-bar', isGlobal);
   if (id==='ov')   renderOverview();
   if (id==='arch') renderArchive();
   if (id==='hub')  renderHub();
-  // Sidebar reflects active state
+  if (id==='act')  renderActivity();
   renderSidebar();
-  // Close sidebar on mobile after picking a section
   closeSidebarMobile();
 }
 
@@ -3213,8 +3364,23 @@ function promptEditUnlock() {
         applyEditLockUI();
         finish(true);
         toast('Editor mode unlocked', 'ok');
-        // First-time editor on this device — prompt for sync setup
-        if (!gistReady()) {
+        // First-time editor on this device — prompt for user name first, then sync setup
+        const needsName = !currentUserName();
+        const needsSync = !gistReady();
+        if (needsName) {
+          setTimeout(() => {
+            promptUserName().then(() => {
+              if (needsSync) {
+                setTimeout(() => {
+                  confirmModal(
+                    'You are editing locally. To sync changes with the team shared Gist, configure your GitHub token now (one-time per device).',
+                    { title:'Configure sync?', confirmLabel:'Set up sync', confirmClass:'btn-navy', cancelLabel:'Skip for now' }
+                  ).then(ok => { if (ok) setupGistCredentials(); });
+                }, 400);
+              }
+            });
+          }, 600);
+        } else if (needsSync) {
           setTimeout(() => {
             confirmModal(
               'You are editing locally. To sync changes with the team shared Gist, configure your GitHub token now (one-time per device).',
@@ -3331,6 +3497,71 @@ async function confirmModal(message, opts={}) {
 }
 
 /* ══════════════════════════════════════════════════════
+   ACTIVITY LOG (read-only viewer of S.activity)
+══════════════════════════════════════════════════════ */
+function renderActivity() {
+  const el = document.getElementById('act-inner');
+  if (!el) return;
+  const list = (S.activity || []);
+  if (list.length === 0) {
+    el.innerHTML = `<div class="act-empty">No activity yet. Edits made by you and other editors will appear here.</div>`;
+    return;
+  }
+
+  // Filter bar
+  const allUsers = Array.from(new Set(list.map(e => e.user))).sort();
+  const allActions = Array.from(new Set(list.map(e => e.action))).sort();
+  const fUser = S._actFilterUser || '';
+  const fAct  = S._actFilterAction || '';
+  const filtered = list.filter(e => {
+    if (fUser && e.user !== fUser) return false;
+    if (fAct && e.action !== fAct) return false;
+    return true;
+  });
+
+  const userOpts = `<option value="">All users</option>` + allUsers.map(u =>
+    `<option value="${escapeAttr(u)}" ${fUser===u?'selected':''}>${escapeHtml(u)}</option>`).join('');
+  const actionOpts = `<option value="">All actions</option>` + allActions.map(a =>
+    `<option value="${escapeAttr(a)}" ${fAct===a?'selected':''}>${escapeHtml(a)}</option>`).join('');
+
+  const rowsHTML = filtered.map(e => {
+    const initials = userInitials(e.user);
+    const dateLabel = new Date(e.ts).toLocaleString('en-US', {
+      day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'
+    });
+    const rel = formatRelativeTime(e.ts);
+    return `<div class="act-row">
+      <div class="act-avatar" title="${escapeAttr(e.user)}">${escapeHtml(initials)}</div>
+      <div class="act-body">
+        <div class="act-line">
+          <strong>${escapeHtml(e.user)}</strong>
+          <span class="act-verb">${escapeHtml(e.action)}</span>
+          <span class="act-target">${escapeHtml(e.target)}</span>
+        </div>
+        <div class="act-meta">${rel} · ${dateLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const empty = filtered.length === 0
+    ? `<div class="act-empty">No entries match the filter.</div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="act-toolbar">
+      <select class="setup-input act-filter" onchange="S._actFilterUser=this.value;renderActivity();">
+        ${userOpts}
+      </select>
+      <select class="setup-input act-filter" onchange="S._actFilterAction=this.value;renderActivity();">
+        ${actionOpts}
+      </select>
+      <div style="flex:1"></div>
+      <span style="font-size:12px;color:var(--muted);font-weight:600">${filtered.length} of ${list.length}</span>
+    </div>
+    <div class="act-list">${rowsHTML}${empty}</div>`;
+}
+
+/* ══════════════════════════════════════════════════════
    ARCHIVE
 ══════════════════════════════════════════════════════ */
 
@@ -3438,6 +3669,7 @@ async function askRestore(id) {
   S.archived = S.archived.filter(x => x.id !== id);
   S.activeId = restored.id;
   S.activeWeek = 'w1';
+  logActivity('restored', `trainee ${restored.name || 'unnamed'}`);
   dirty(); renderAll();
 }
 
@@ -3584,6 +3816,7 @@ async function archiveTrainee(id) {
   S.trainees = S.trainees.filter(x=>x.id!==id);
   if (S.trainees.length===0) { const nt=newTrainee(); S.trainees=[nt]; S.activeId=nt.id; }
   else if (S.activeId===id) S.activeId=S.trainees[0].id;
+  logActivity('archived', `trainee ${name}`);
   dirty(); renderAll();
 }
 
@@ -3595,6 +3828,82 @@ async function archiveTrainee(id) {
 ══════════════════════════════════════════════════════ */
 
 function gistReady() { return !!(window.GIST_TOKEN && window.GIST_ID); }
+
+/* Ask the user for their display name. Used in the sidebar avatar and the activity log.
+   Stored in localStorage per device. */
+function promptUserName(opts) {
+  opts = opts || {};
+  const isFirstTime = !currentUserName();
+  return new Promise(resolve => {
+    const host = document.getElementById('modal-host');
+    let resolved = false;
+    const cleanup = () => {
+      host.innerHTML = '';
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', onKey);
+    };
+    const finish = (val) => { if (resolved) return; resolved = true; cleanup(); resolve(val); };
+    const onKey = (e) => {
+      if (e.key === 'Escape' && !opts.required) finish(null);
+      else if (e.key === 'Enter') { e.preventDefault(); save(); }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+
+    const current = currentUserName();
+
+    host.innerHTML = `
+      <div class="mdl-back" id="mdl-back">
+        <div class="mdl-card mdl-large" role="dialog" aria-modal="true" onclick="event.stopPropagation()" style="max-width:480px">
+          <div class="mdl-hd">
+            <div>
+              <div class="mdl-sub">${isFirstTime ? 'First time on this device' : 'Update your name'}</div>
+              <div class="mdl-title">${isFirstTime ? 'What is your <em>name</em>?' : 'Edit your <em>name</em>'}</div>
+            </div>
+            ${!opts.required ? `<button class="mdl-x" id="mdl-x">✕</button>` : ''}
+          </div>
+          <div class="mdl-bd">
+            <p style="margin-bottom:14px;font-size:13px;color:var(--muted)">Used for the sidebar avatar and to attribute your changes in the activity log. Stored only on this device.</p>
+            <input type="text" id="un-input" class="setup-input" placeholder="e.g. Boris Tashkov" value="${escapeAttr(current)}" autocomplete="name" autocapitalize="words" spellcheck="false">
+            <div class="mdl-pwd-err" id="un-err" style="margin-top:8px"></div>
+          </div>
+          <div class="mdl-ft">
+            <div style="flex:1"></div>
+            ${!opts.required ? `<button class="btn btn-ghost-dark" id="btn-cancel">Cancel</button>` : ''}
+            <button class="btn btn-navy" id="btn-save">${isFirstTime ? 'Continue' : 'Save'}</button>
+          </div>
+        </div>
+      </div>`;
+
+    const input = document.getElementById('un-input');
+    const errEl = document.getElementById('un-err');
+
+    const save = () => {
+      const v = input.value.trim();
+      if (!v) {
+        errEl.textContent = 'Please enter your name';
+        input.classList.add('shake');
+        setTimeout(() => input.classList.remove('shake'), 400);
+        return;
+      }
+      setUserName(v);
+      finish(v);
+    };
+
+    document.getElementById('btn-save').addEventListener('click', save);
+    const cancelBtn = document.getElementById('btn-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', () => finish(null));
+    const xBtn = document.getElementById('mdl-x');
+    if (xBtn) xBtn.addEventListener('click', () => finish(null));
+    document.getElementById('mdl-back').addEventListener('click', e => {
+      if (e.target.id === 'mdl-back' && !opts.required) finish(null);
+    });
+    document.addEventListener('keydown', onKey);
+    setTimeout(() => input.focus(), 30);
+  });
+}
 
 /* Setup Gist credentials — stored in localStorage per device.
    Token is never embedded in the HTML file (avoids GitHub auto-revoke). */
