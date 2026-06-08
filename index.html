@@ -369,6 +369,173 @@ body {
 .sb-lock-btn .lock-icon { font-size: 11px; line-height: 1; }
 .lock-pill { /* JS-side alias; styling via .sb-lock-btn */ }
 
+/* Save + Reload row (visible only in editor mode) */
+.sb-save-row {
+  display: flex;
+  gap: 4px;
+  padding: 0 6px 6px;
+}
+.sb-save-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.70);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 700;
+  transition: all .15s;
+  position: relative;
+}
+.sb-save-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.sb-save-btn.has-unsaved {
+  background: #00C4D0;
+  border-color: #00C4D0;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0,196,208,0.35);
+}
+.sb-save-btn.has-unsaved:hover { background: #00d4e0; }
+.sb-save-btn.saving { opacity: 0.6; pointer-events: none; }
+.sb-save-badge {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  border-radius: 9px;
+  padding: 1px 7px;
+  font-size: 10px; font-weight: 800;
+  min-width: 20px;
+  text-align: center;
+}
+.sb-save-btn:not(.has-unsaved) .sb-save-badge { display: none !important; }
+
+.sb-reload-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px;
+  padding: 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.70);
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.sb-reload-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* Dirty indicators — teal left border on changed cells */
+.is-dirty {
+  box-shadow: inset 3px 0 0 var(--teal) !important;
+  background-color: rgba(0,196,208,0.04) !important;
+  transition: box-shadow .2s, background-color .2s;
+}
+textarea.is-dirty,
+input.is-dirty,
+select.is-dirty {
+  border-color: var(--teal) !important;
+}
+.rdrop-btn.is-dirty {
+  box-shadow: inset 3px 0 0 var(--teal), 0 1px 0 rgba(25,33,102,.04) !important;
+}
+
+/* Change preview modal */
+.prv-grps { display: flex; flex-direction: column; gap: 14px; }
+.prv-grp {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  background: var(--bg2);
+}
+.prv-grp-hd {
+  font-size: 12px; font-weight: 700;
+  color: var(--navy);
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.prv-cnt {
+  background: var(--teal-tint);
+  color: var(--teal-deep);
+  border-radius: 9px;
+  padding: 1px 8px;
+  font-size: 10px; font-weight: 800;
+}
+.prv-list {
+  list-style: none;
+  padding: 0; margin: 0;
+}
+.prv-list li {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 3px 0 3px 14px;
+  position: relative;
+  line-height: 1.45;
+}
+.prv-list li::before {
+  content: '·';
+  position: absolute;
+  left: 4px;
+  color: var(--teal);
+  font-weight: 900;
+}
+.prv-list li.prv-more {
+  font-style: italic;
+  color: var(--muted2);
+}
+
+/* Conflict modal */
+.cnf-list { display: flex; flex-direction: column; gap: 14px; }
+.cnf-row {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  background: var(--bg2);
+}
+.cnf-row.has-choice { border-color: var(--teal); background: rgba(0,196,208,0.03); }
+.cnf-label {
+  font-size: 12px; font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 9px;
+  letter-spacing: .01em;
+}
+.cnf-versions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.cnf-ver {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all .15s;
+  min-height: 56px;
+}
+.cnf-ver:not(:first-child):hover {
+  border-color: var(--teal);
+  background: rgba(0,196,208,0.04);
+}
+.cnf-ver:first-child { cursor: default; background: var(--navy-tint); }
+.cnf-ver.sel {
+  border-color: var(--teal);
+  background: rgba(0,196,208,0.10);
+  box-shadow: 0 0 0 2px rgba(0,196,208,0.20);
+}
+.cnf-ver-hd {
+  font-size: 9px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.cnf-ver.sel .cnf-ver-hd { color: var(--teal-deep); }
+.cnf-ver-val {
+  font-size: 12px; font-weight: 600;
+  color: var(--navy);
+  word-break: break-word;
+  line-height: 1.4;
+}
+.cnf-both { font-size: 11px; font-weight: 500; }
+
 /* Mobile topbar */
 .mobile-topbar {
   display: none; /* desktop hides this */
@@ -1421,6 +1588,16 @@ body.readonly .editor-only { display:none !important; }
   </nav>
 
   <div class="sb-footer">
+    <div class="sb-save-row editor-only">
+      <button class="sb-save-btn" id="sb-save-btn" onclick="saveNow()" title="Save unsaved changes to the team Gist">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span>Save</span>
+        <span class="sb-save-badge" id="save-btn-badge" style="display:none"></span>
+      </button>
+      <button class="sb-reload-btn" id="sb-reload-btn" onclick="reloadNow()" title="Discard local changes and reload from team Gist">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
     <button class="sb-lock-btn" id="lock-pill" onclick="toggleEditLock()">
       <span class="lock-status-dot"></span>
       <span class="lock-icon">🔒</span>
@@ -2024,7 +2201,7 @@ function pickRating(id, tid, wid, di, crit, val) {
     btn.querySelector('.rdrop-lbl').textContent = ratingLbl(val);
   }
   closeRdrop();
-  dirty(); refreshScore(tid, wid); refreshDot(t, wid);
+  dirty(`trainee/${tid}/${wid}/${di}/${crit}`); refreshScore(tid, wid); refreshDot(t, wid);
 }
 
 function buildWeekPanel(def, t, isFirst) {
@@ -2234,7 +2411,7 @@ function switchTraineeFromSidebar(id) {
   // Switch to trainee AND go to a week panel (default w1 if current is a global view)
   S.activeId = id;
   if (isGlobalView(S.activeWeek)) S.activeWeek = 'w1';
-  dirty();
+  try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
   renderAll();
   closeSidebarMobile();
 }
@@ -2382,7 +2559,7 @@ function renderHub() {
 function hubGo(tab) {
   S.hub.hubTab = tab;
   renderHub();
-  dirty();
+  try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
 }
 
 /* ───── CALENDAR ───── */
@@ -2400,7 +2577,7 @@ function hubMoveMonth(delta) {
   cur.setMonth(cur.getMonth() + delta);
   S.hub.calCursor = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-01`;
   renderHubCalendar();
-  dirty();
+  try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
 }
 
 function hubMonthLabel(d) {
@@ -2583,7 +2760,7 @@ function hubGoToday() {
   const now = new Date();
   S.hub.calCursor = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
   renderHubCalendar();
-  dirty();
+  try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
 }
 
 function selectCalDay(iso) {
@@ -2779,7 +2956,7 @@ function openEventModal(eventId, defaultDate) {
         S.hub.events.push(next);
         logActivity('added', `training ${platLbl} · ${date}`);
       }
-      dirty();
+      dirty(`hub/event/${next.id}`);
       renderHubCalendar();
       finish(true);
       toast(isEdit?'Training updated':'Training added', 'ok');
@@ -2797,9 +2974,10 @@ function openEventModal(eventId, defaultDate) {
           { title:'Delete training?', confirmLabel:'Delete', confirmClass:'btn-danger' }
         );
         if (!ok) { openEventModal(eventId, null); resolve(false); return; }
-        S.hub.events = S.hub.events.filter(e => e.id !== ev.id);
+        const delId = ev.id;
+        S.hub.events = S.hub.events.filter(e => e.id !== delId);
         logActivity('deleted', `training ${(HUB_PLATFORM_BY_V[ev.platform]||{}).l||'training'} · ${ev.date}`);
-        dirty();
+        dirty(`hub/event/${delId}/__deleted`);
         renderHubCalendar();
         toast('Training deleted', 'ok');
         resolve(true);
@@ -2911,7 +3089,7 @@ async function deleteMaterial(id) {
   if (!ok) return;
   S.hub.materials = S.hub.materials.filter(x => x.id !== id);
   logActivity('deleted', `material "${m.title || 'untitled'}"`);
-  dirty(); renderHubMaterials();
+  dirty(`hub/material/${id}/__deleted`); renderHubMaterials();
   toast('Material deleted', 'ok');
 }
 
@@ -3010,7 +3188,7 @@ function openMaterialModal(matId) {
         S.hub.materials.unshift(next);
         logActivity('added', `material "${title}"`);
       }
-      dirty(); renderHubMaterials();
+      dirty(`hub/material/${next.id}`); renderHubMaterials();
       finish(true);
       toast(isEdit?'Material updated':'Material added', 'ok');
     };
@@ -3039,7 +3217,7 @@ function addTrainee() {
   S.activeId = t.id;
   S.activeWeek = 'w1';
   logActivity('added', 'a new trainee');
-  dirty(); renderAll();
+  dirty(`trainees/__added/${t.id}`); renderAll();
 }
 
 function switchTrainee(id) {
@@ -3049,7 +3227,8 @@ function switchTrainee(id) {
   renderSidebar();
   renderSetup();
   renderMain();
-  dirty();
+  // Persist UI state to localStorage (not a "data change" — no dirty marker, no Save needed)
+  try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
 }
 
 async function removeTrainee(e, id) {
@@ -3065,7 +3244,7 @@ async function removeTrainee(e, id) {
   S.trainees = S.trainees.filter(x=>x.id!==id);
   if (S.trainees.length === 0) { const nt=newTrainee(); S.trainees=[nt]; S.activeId=nt.id; }
   else if (S.activeId === id) S.activeId = S.trainees[0].id;
-  dirty(); renderAll();
+  dirty(`trainees/${id}/__deleted`); renderAll();
 }
 
 async function deleteActiveTrainee() {
@@ -3079,10 +3258,11 @@ async function deleteActiveTrainee() {
   );
   if (!ok) return;
   logActivity('deleted', `trainee ${name}`);
-  S.trainees = S.trainees.filter(x => x.id !== t.id);
+  const tid = t.id;
+  S.trainees = S.trainees.filter(x => x.id !== tid);
   if (S.trainees.length === 0) { const nt = newTrainee(); S.trainees = [nt]; S.activeId = nt.id; }
-  else if (S.activeId === t.id) S.activeId = S.trainees[0].id;
-  dirty(); renderAll();
+  else if (S.activeId === tid) S.activeId = S.trainees[0].id;
+  dirty(`trainees/${tid}/__deleted`); renderAll();
   toast('Trainee deleted', 'ok');
 }
 
@@ -3097,14 +3277,14 @@ function syncSetup(field, val) {
   if (field === 'name' || field === 'platform') {
     renderSidebar();
   }
-  dirty();
+  dirty(`trainee/${t.id}/${field}`);
 }
 
 function onRating(tid, wid, di, crit, el) {
   const t = S.trainees.find(x=>x.id===tid);
   t.weeks[wid].days[di][crit] = el.value;
   el.className = `rating-sel rc-${el.value||'x'}`;
-  dirty(); refreshScore(tid, wid); refreshDot(t, wid);
+  dirty(`trainee/${tid}/${wid}/${di}/${crit}`); refreshScore(tid, wid); refreshDot(t, wid);
 }
 
 function onWeekTest(tid, wid, el) {
@@ -3121,19 +3301,19 @@ function onWeekTest(tid, wid, el) {
   const t = S.trainees.find(x=>x.id===tid);
   t.weeks[wid].test = raw;
   el.className = `wt-input ${testCls(raw)}`;
-  dirty(); refreshScore(tid, wid); refreshDot(t, wid);
+  dirty(`trainee/${tid}/${wid}/test`); refreshScore(tid, wid); refreshDot(t, wid);
 }
 
 function onNote(tid, wid, di, val) {
   if (!editUnlocked) { renderMain(); return promptEditUnlock(); }
   S.trainees.find(x=>x.id===tid).weeks[wid].days[di].note = val;
-  dirty();
+  dirty(`trainee/${tid}/${wid}/${di}/note`);
 }
 
 function onWC(tid, wid, field, val) {
   if (!editUnlocked) { renderMain(); return promptEditUnlock(); }
   S.trainees.find(x=>x.id===tid).weeks[wid][field] = val;
-  dirty();
+  dirty(`trainee/${tid}/${wid}/${field}`);
 }
 
 function toggleNote(prefix, di, btn) {
@@ -3189,18 +3369,136 @@ function goWeek(id) {
 }
 
 /* ══════════════════════════════════════════════════════
-   AUTOSAVE
+   MANUAL SAVE/RELOAD INFRASTRUCTURE (v3.19)
+
+   Replaces the old auto-sync. Edits are kept locally until the user clicks
+   the Save button in the sidebar. On Save, we compute a three-way merge
+   against the current Gist state and resolve conflicts cell-by-cell.
+
+   Tracking model:
+   - _baseSnapshot: deep clone of S at the moment we last loaded from Gist
+                    (or at page open). Used to compute "what did the user
+                    actually change?" vs "what changed in the Gist?".
+   - _dirtyFields:  Set<string> of field-path keys touched locally since
+                    last load. Path format:
+                      trainee/<tid>/<wid>/<dayIdx>/<crit>
+                      trainee/<tid>/<wid>/<dayIdx>/note
+                      trainee/<tid>/<wid>/test
+                      trainee/<tid>/<wid>/weeklyComment
+                      trainee/<tid>/<wid>/tlComment
+                      trainee/<tid>/<setupField>          (name|date|trainer|mentor|platform)
+                      trainees/__added/<tid>              (newly created trainee)
+                      trainees/<tid>/__deleted
+                      trainees/<tid>/__archived
+                      archived/<tid>/__restored
+                      hub/event/<eid>
+                      hub/event/<eid>/__deleted
+                      hub/material/<mid>
+                      hub/material/<mid>/__deleted
 ══════════════════════════════════════════════════════ */
-let _st=null;
-function dirty() {
-  const dot=document.getElementById('as-dot'), txt=document.getElementById('as-txt');
-  dot.className='as-dot saving'; txt.textContent='Saving…';
+
+let _baseSnapshot = null;
+let _dirtyFields  = new Set();
+
+function takeBaseSnapshot() {
+  try { _baseSnapshot = JSON.parse(JSON.stringify(S)); } catch(e) { _baseSnapshot = null; }
+  _dirtyFields = new Set();
+  updateUnsavedBadge();
+  applyDirtyMarkers();
+}
+
+function markDirty(path) {
+  if (!path) return;
+  _dirtyFields.add(path);
+  updateUnsavedBadge();
+  scheduleDirtyMarkerApply();
+}
+
+let _dirtyMarkerTimer = null;
+function scheduleDirtyMarkerApply() {
+  clearTimeout(_dirtyMarkerTimer);
+  _dirtyMarkerTimer = setTimeout(applyDirtyMarkers, 60);
+}
+
+function dirtyCount() { return _dirtyFields.size; }
+
+function updateUnsavedBadge() {
+  const n = dirtyCount();
+  const badge  = document.getElementById('save-btn-badge');
+  const saveBt = document.getElementById('sb-save-btn');
+  if (badge) {
+    badge.textContent = n > 0 ? (n > 99 ? '99+' : String(n)) : '';
+    badge.style.display = n > 0 ? '' : 'none';
+  }
+  if (saveBt) saveBt.classList.toggle('has-unsaved', n > 0);
+  const txt = document.getElementById('as-txt');
+  const dot = document.getElementById('as-dot');
+  if (txt && dot) {
+    if (n > 0) {
+      txt.textContent = `${n} unsaved`;
+      dot.className = 'sb-status-dot saving';
+    } else if (gistReady()) {
+      txt.textContent = 'Synced';
+      dot.className = 'sb-status-dot saved';
+    } else {
+      txt.textContent = 'Local only';
+      dot.className = 'sb-status-dot';
+    }
+  }
+}
+
+/* Idempotent: walks dirty paths, adds .is-dirty to the corresponding visible elements. */
+function applyDirtyMarkers() {
+  document.querySelectorAll('.is-dirty').forEach(el => el.classList.remove('is-dirty'));
+  if (_dirtyFields.size === 0) return;
+  _dirtyFields.forEach(path => {
+    // trainee/<tid>/<wid>/<di>/<crit-or-note>
+    const m1 = path.match(/^trainee\/([^/]+)\/(w\d)\/(\d)\/(.+)$/);
+    if (m1) {
+      const [, tid, wid, di, field] = m1;
+      const tCur = active();
+      if (!tCur || tCur.id !== tid) return;
+      if (S.activeWeek !== wid) return;
+      const el = document.getElementById(`${tid}_${wid}_d${di}_${field}`);
+      if (el) el.classList.add('is-dirty');
+      return;
+    }
+    // trainee/<tid>/<wid>/(test|weeklyComment|tlComment)
+    const m2 = path.match(/^trainee\/([^/]+)\/(w\d)\/(test|weeklyComment|tlComment)$/);
+    if (m2) {
+      const [, tid, wid, field] = m2;
+      const tCur = active();
+      if (!tCur || tCur.id !== tid) return;
+      if (S.activeWeek !== wid) return;
+      if (field === 'test') {
+        const el = document.getElementById(`${tid}_${wid}_wktest`);
+        if (el) el.classList.add('is-dirty');
+      } else {
+        const el = document.querySelector(`#panel-${wid} textarea[data-field="${field}"]`);
+        if (el) el.classList.add('is-dirty');
+      }
+      return;
+    }
+    // trainee/<tid>/<setupField>
+    const m3 = path.match(/^trainee\/([^/]+)\/(name|date|trainer|mentor|platform)$/);
+    if (m3) {
+      const [, tid, field] = m3;
+      const tCur = active();
+      if (!tCur || tCur.id !== tid) return;
+      const el = document.getElementById(`f-${field}`);
+      if (el) el.classList.add('is-dirty');
+    }
+  });
+}
+
+let _st = null;
+function dirty(path) {
+  if (path) markDirty(path);
+  else updateUnsavedBadge();
   clearTimeout(_st);
-  _st=setTimeout(()=>{
-    try { localStorage.setItem('tt3_state',JSON.stringify(S)); } catch(e){}
-    dot.className='as-dot saved'; txt.textContent='Saved';
-    scheduleGistPush();
-  },600);
+  _st = setTimeout(() => {
+    try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
+  }, 300);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -3670,7 +3968,7 @@ async function askRestore(id) {
   S.activeId = restored.id;
   S.activeWeek = 'w1';
   logActivity('restored', `trainee ${restored.name || 'unnamed'}`);
-  dirty(); renderAll();
+  dirty(`archived/${id}/__restored`); renderAll();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -3817,7 +4115,7 @@ async function archiveTrainee(id) {
   if (S.trainees.length===0) { const nt=newTrainee(); S.trainees=[nt]; S.activeId=nt.id; }
   else if (S.activeId===id) S.activeId=S.trainees[0].id;
   logActivity('archived', `trainee ${name}`);
-  dirty(); renderAll();
+  dirty(`trainees/${id}/__archived`); renderAll();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -4077,19 +4375,686 @@ function setIndicator(state, msg) {
   if (msg) txt.textContent = msg;
 }
 
-async function pushGist() {
-  if (!gistReady()) return;
-  if (_gistPushInFlight) {
-    // A push is already going; reschedule to push again afterwards
-    scheduleGistPush();
+/* ══════════════════════════════════════════════════════
+   MANUAL SAVE / RELOAD + THREE-WAY MERGE (v3.19)
+══════════════════════════════════════════════════════ */
+
+/**
+ * Read a specific cell value from state S, based on a dirty-path key.
+ * Returns { exists, value, label, kind } where kind is 'scalar'|'text'|'__add'|'__del'|'__archive'|'__restore'.
+ */
+function readPath(state, path) {
+  // trainee/<tid>/<wid>/<di>/<crit-or-note>
+  let m = path.match(/^trainee\/([^/]+)\/(w\d)\/(\d)\/(.+)$/);
+  if (m) {
+    const [, tid, wid, di, field] = m;
+    const t = state.trainees.find(x => x.id === tid);
+    if (!t) return { exists:false };
+    const wk = t.weeks && t.weeks[wid];
+    if (!wk) return { exists:false };
+    const day = wk.days && wk.days[parseInt(di,10)];
+    if (!day) return { exists:false };
+    const v = day[field];
+    return {
+      exists: true,
+      value: v,
+      label: `${t.name||'Unnamed'} · Week ${wid.replace('w','')} · Day ${parseInt(di,10)+1} · ${field}`,
+      kind: field === 'note' ? 'text' : 'scalar'
+    };
+  }
+  // trainee/<tid>/<wid>/(test|weeklyComment|tlComment)
+  m = path.match(/^trainee\/([^/]+)\/(w\d)\/(test|weeklyComment|tlComment)$/);
+  if (m) {
+    const [, tid, wid, field] = m;
+    const t = state.trainees.find(x => x.id === tid);
+    if (!t) return { exists:false };
+    const wk = t.weeks && t.weeks[wid];
+    if (!wk) return { exists:false };
+    const fLabel = field === 'test' ? 'end-of-week test' : (field === 'weeklyComment' ? 'trainer/mentor notes' : 'TL comment');
+    return {
+      exists: true,
+      value: wk[field],
+      label: `${t.name||'Unnamed'} · Week ${wid.replace('w','')} · ${fLabel}`,
+      kind: field === 'test' ? 'scalar' : 'text'
+    };
+  }
+  // trainee/<tid>/(name|date|trainer|mentor|platform)
+  m = path.match(/^trainee\/([^/]+)\/(name|date|trainer|mentor|platform)$/);
+  if (m) {
+    const [, tid, field] = m;
+    const t = state.trainees.find(x => x.id === tid);
+    if (!t) return { exists:false };
+    return {
+      exists: true,
+      value: t[field],
+      label: `${t.name||'Unnamed'} · ${field}`,
+      kind: field === 'name' || field === 'trainer' || field === 'mentor' ? 'text' : 'scalar'
+    };
+  }
+  // trainees/__added/<tid>
+  m = path.match(/^trainees\/__added\/([^/]+)$/);
+  if (m) {
+    const [, tid] = m;
+    const t = state.trainees.find(x => x.id === tid);
+    return { exists: !!t, value: t, label: `Added trainee: ${t?.name||'unnamed'}`, kind: '__add' };
+  }
+  // trainees/<tid>/__deleted
+  m = path.match(/^trainees\/([^/]+)\/__deleted$/);
+  if (m) {
+    const [, tid] = m;
+    const stillExists = state.trainees.some(x => x.id === tid);
+    return { exists: !stillExists, value: null, label: `Deleted trainee`, kind: '__del' };
+  }
+  // trainees/<tid>/__archived
+  m = path.match(/^trainees\/([^/]+)\/__archived$/);
+  if (m) {
+    const [, tid] = m;
+    const inArchived = state.archived && state.archived.some(x => x.id === tid);
+    return { exists: !!inArchived, value: null, label: `Archived trainee`, kind: '__archive' };
+  }
+  // archived/<tid>/__restored
+  m = path.match(/^archived\/([^/]+)\/__restored$/);
+  if (m) {
+    const [, tid] = m;
+    const inActive = state.trainees.some(x => x.id === tid);
+    return { exists: inActive, value: null, label: `Restored trainee from archive`, kind: '__restore' };
+  }
+  // hub/event/<eid>
+  m = path.match(/^hub\/event\/([^/]+)$/);
+  if (m) {
+    const [, eid] = m;
+    const ev = state.hub?.events?.find(e => e.id === eid);
+    return {
+      exists: !!ev,
+      value: ev,
+      label: ev ? `Training on ${ev.date}` : `Training event`,
+      kind: 'scalar'
+    };
+  }
+  // hub/event/<eid>/__deleted
+  m = path.match(/^hub\/event\/([^/]+)\/__deleted$/);
+  if (m) {
+    const [, eid] = m;
+    const stillExists = state.hub?.events?.some(e => e.id === eid);
+    return { exists: !stillExists, value: null, label: `Deleted training`, kind: '__del' };
+  }
+  // hub/material/<mid>
+  m = path.match(/^hub\/material\/([^/]+)$/);
+  if (m) {
+    const [, mid] = m;
+    const mat = state.hub?.materials?.find(x => x.id === mid);
+    return {
+      exists: !!mat,
+      value: mat,
+      label: mat ? `Material "${mat.title}"` : `Material`,
+      kind: 'scalar'
+    };
+  }
+  // hub/material/<mid>/__deleted
+  m = path.match(/^hub\/material\/([^/]+)\/__deleted$/);
+  if (m) {
+    const [, mid] = m;
+    const stillExists = state.hub?.materials?.some(x => x.id === mid);
+    return { exists: !stillExists, value: null, label: `Deleted material`, kind: '__del' };
+  }
+  return { exists: false };
+}
+
+/**
+ * Write the local (mine) value at this path INTO the merged state.
+ * mergeState must be writable (deep clone of remote state). myState is current S.
+ */
+function writePathTo(mergedState, myState, path) {
+  // For most paths we can copy the value directly from myState.
+  // Special handling for __add/__del/__archive/__restore (structural changes).
+  let m;
+
+  // Field updates inside a trainee
+  m = path.match(/^trainee\/([^/]+)\/(w\d)\/(\d)\/(.+)$/);
+  if (m) {
+    const [, tid, wid, di, field] = m;
+    const myT = myState.trainees.find(x => x.id === tid);
+    if (!myT) return;
+    let mergedT = mergedState.trainees.find(x => x.id === tid);
+    if (!mergedT) {
+      // trainee doesn't exist in remote — copy our entire trainee over (was added by us)
+      mergedState.trainees.push(JSON.parse(JSON.stringify(myT)));
+      return;
+    }
+    if (!mergedT.weeks) mergedT.weeks = JSON.parse(JSON.stringify(myT.weeks));
+    if (!mergedT.weeks[wid]) mergedT.weeks[wid] = JSON.parse(JSON.stringify(myT.weeks[wid]));
+    if (!mergedT.weeks[wid].days[parseInt(di,10)]) {
+      mergedT.weeks[wid].days[parseInt(di,10)] = JSON.parse(JSON.stringify(myT.weeks[wid].days[parseInt(di,10)]));
+    }
+    mergedT.weeks[wid].days[parseInt(di,10)][field] = myT.weeks[wid].days[parseInt(di,10)][field];
     return;
   }
-  _gistPushInFlight = true;
+  m = path.match(/^trainee\/([^/]+)\/(w\d)\/(test|weeklyComment|tlComment)$/);
+  if (m) {
+    const [, tid, wid, field] = m;
+    const myT = myState.trainees.find(x => x.id === tid);
+    if (!myT) return;
+    let mergedT = mergedState.trainees.find(x => x.id === tid);
+    if (!mergedT) {
+      mergedState.trainees.push(JSON.parse(JSON.stringify(myT)));
+      return;
+    }
+    if (!mergedT.weeks) mergedT.weeks = JSON.parse(JSON.stringify(myT.weeks));
+    if (!mergedT.weeks[wid]) mergedT.weeks[wid] = JSON.parse(JSON.stringify(myT.weeks[wid]));
+    mergedT.weeks[wid][field] = myT.weeks[wid][field];
+    return;
+  }
+  m = path.match(/^trainee\/([^/]+)\/(name|date|trainer|mentor|platform)$/);
+  if (m) {
+    const [, tid, field] = m;
+    const myT = myState.trainees.find(x => x.id === tid);
+    if (!myT) return;
+    let mergedT = mergedState.trainees.find(x => x.id === tid);
+    if (!mergedT) {
+      mergedState.trainees.push(JSON.parse(JSON.stringify(myT)));
+      return;
+    }
+    mergedT[field] = myT[field];
+    return;
+  }
+  // Structural: add
+  m = path.match(/^trainees\/__added\/([^/]+)$/);
+  if (m) {
+    const [, tid] = m;
+    const myT = myState.trainees.find(x => x.id === tid);
+    if (!myT) return;
+    if (!mergedState.trainees.some(x => x.id === tid)) {
+      mergedState.trainees.push(JSON.parse(JSON.stringify(myT)));
+    }
+    return;
+  }
+  // Structural: delete
+  m = path.match(/^trainees\/([^/]+)\/__deleted$/);
+  if (m) {
+    const [, tid] = m;
+    mergedState.trainees = mergedState.trainees.filter(x => x.id !== tid);
+    if (mergedState.archived) mergedState.archived = mergedState.archived.filter(x => x.id !== tid);
+    return;
+  }
+  // Structural: archive
+  m = path.match(/^trainees\/([^/]+)\/__archived$/);
+  if (m) {
+    const [, tid] = m;
+    const myArchived = (myState.archived || []).find(x => x.id === tid);
+    if (!myArchived) return;
+    mergedState.trainees = mergedState.trainees.filter(x => x.id !== tid);
+    if (!mergedState.archived) mergedState.archived = [];
+    if (!mergedState.archived.some(x => x.id === tid)) {
+      mergedState.archived.unshift(JSON.parse(JSON.stringify(myArchived)));
+    }
+    return;
+  }
+  // Structural: restore
+  m = path.match(/^archived\/([^/]+)\/__restored$/);
+  if (m) {
+    const [, tid] = m;
+    const myT = myState.trainees.find(x => x.id === tid);
+    if (!myT) return;
+    if (mergedState.archived) mergedState.archived = mergedState.archived.filter(x => x.id !== tid);
+    if (!mergedState.trainees.some(x => x.id === tid)) {
+      mergedState.trainees.push(JSON.parse(JSON.stringify(myT)));
+    }
+    return;
+  }
+  // Hub event upsert
+  m = path.match(/^hub\/event\/([^/]+)$/);
+  if (m) {
+    const [, eid] = m;
+    const myEv = myState.hub?.events?.find(e => e.id === eid);
+    if (!myEv) return;
+    if (!mergedState.hub) mergedState.hub = { events: [], materials: [] };
+    if (!mergedState.hub.events) mergedState.hub.events = [];
+    const idx = mergedState.hub.events.findIndex(e => e.id === eid);
+    if (idx >= 0) mergedState.hub.events[idx] = JSON.parse(JSON.stringify(myEv));
+    else mergedState.hub.events.push(JSON.parse(JSON.stringify(myEv)));
+    return;
+  }
+  // Hub event delete
+  m = path.match(/^hub\/event\/([^/]+)\/__deleted$/);
+  if (m) {
+    const [, eid] = m;
+    if (mergedState.hub?.events) {
+      mergedState.hub.events = mergedState.hub.events.filter(e => e.id !== eid);
+    }
+    return;
+  }
+  // Hub material upsert
+  m = path.match(/^hub\/material\/([^/]+)$/);
+  if (m) {
+    const [, mid] = m;
+    const myMat = myState.hub?.materials?.find(x => x.id === mid);
+    if (!myMat) return;
+    if (!mergedState.hub) mergedState.hub = { events: [], materials: [] };
+    if (!mergedState.hub.materials) mergedState.hub.materials = [];
+    const idx = mergedState.hub.materials.findIndex(x => x.id === mid);
+    if (idx >= 0) mergedState.hub.materials[idx] = JSON.parse(JSON.stringify(myMat));
+    else mergedState.hub.materials.unshift(JSON.parse(JSON.stringify(myMat)));
+    return;
+  }
+  // Hub material delete
+  m = path.match(/^hub\/material\/([^/]+)\/__deleted$/);
+  if (m) {
+    const [, mid] = m;
+    if (mergedState.hub?.materials) {
+      mergedState.hub.materials = mergedState.hub.materials.filter(x => x.id !== mid);
+    }
+    return;
+  }
+}
+
+/**
+ * For a given path, look up what the value is in base vs my vs remote.
+ * Returns { conflict: bool, mine, theirs, base, label, kind, path }.
+ */
+function classifyPath(path, baseState, remoteState, myState) {
+  const myV     = readPath(myState, path);
+  const remoteV = readPath(remoteState, path);
+  const baseV   = baseState ? readPath(baseState, path) : { exists:false };
+
+  // Did remote change this since base?
+  const remoteChanged = !valuesEqual(baseV, remoteV);
+  // We always assume the user changed it (otherwise it wouldn't be in dirty set)
+
+  // Conflict iff remote also touched the same cell AND remote value != my value
+  const conflict = remoteChanged && !valuesEqual(remoteV, myV);
+  return { conflict, mine: myV, theirs: remoteV, base: baseV, label: myV.label || path, kind: myV.kind, path };
+}
+
+function valuesEqual(a, b) {
+  // Both are { exists, value, ... }
+  if (!a || !b) return a === b;
+  if (!a.exists && !b.exists) return true;
+  if (a.exists !== b.exists) return false;
+  // Special kinds: __add, __del, __archive, __restore — these are existence-bound
+  if (a.kind && a.kind.startsWith('__')) return a.exists === b.exists;
+  // Compare values (might be objects)
+  if (typeof a.value === 'object' && typeof b.value === 'object') {
+    return JSON.stringify(a.value) === JSON.stringify(b.value);
+  }
+  // Treat null/undefined/empty string as equivalent (for text fields)
+  const va = (a.value === undefined || a.value === null) ? '' : a.value;
+  const vb = (b.value === undefined || b.value === null) ? '' : b.value;
+  return va === vb;
+}
+
+/* ── Save flow ─────────────────────────────────────── */
+
+let _saveInFlight = false;
+
+async function saveNow() {
+  if (_saveInFlight) return;
+  if (!editUnlocked) return promptEditUnlock();
+  if (!gistReady()) {
+    toast('Configure Gist sync first (gear icon)', 'warn');
+    return;
+  }
+  if (_dirtyFields.size === 0) {
+    toast('Nothing to save', 'ok');
+    return;
+  }
+
+  // If user has many changes, ask for confirmation first
+  if (_dirtyFields.size >= 10) {
+    const ok = await showChangePreviewModal();
+    if (!ok) return;
+  }
+
+  _saveInFlight = true;
+  const saveBtn = document.getElementById('sb-save-btn');
+  if (saveBtn) saveBtn.classList.add('saving');
+
+  try {
+    // 1. Pull current Gist state for three-way merge
+    setIndicator('busy', 'Pulling latest…');
+    let remoteState;
+    try {
+      remoteState = await pullGist({ returnOnly: true });
+    } catch (e) {
+      setIndicator('err', 'Pull failed');
+      toast('Could not load latest from Gist — try again', 'err');
+      return;
+    }
+
+    // 2. If remote is null/empty, just push our state
+    if (!remoteState) {
+      await pushGist();
+      const n = _dirtyFields.size;
+      logActivity('saved', `${n} change${n!==1?'s':''}`);
+      takeBaseSnapshot();
+      renderActivity?.();
+      toast(`Saved ${n} change${n!==1?'s':''}`, 'ok');
+      return;
+    }
+    applyMigrations(remoteState);
+
+    // 3. Classify each dirty path: disjoint or conflict
+    const conflicts = [];
+    const disjoint = [];
+    _dirtyFields.forEach(path => {
+      const c = classifyPath(path, _baseSnapshot, remoteState, S);
+      if (c.conflict) conflicts.push(c);
+      else disjoint.push(c);
+    });
+
+    // 4. If conflicts exist, show modal
+    let resolutions = null;
+    if (conflicts.length > 0) {
+      resolutions = await showConflictModal(conflicts);
+      if (resolutions === null) return;  // user cancelled
+    }
+
+    // 5. Build merged state starting from remote
+    const merged = JSON.parse(JSON.stringify(remoteState));
+    // 5a. Apply all disjoint changes from my state
+    disjoint.forEach(c => writePathTo(merged, S, c.path));
+    // 5b. Apply conflict resolutions
+    if (resolutions) {
+      conflicts.forEach((c, i) => {
+        const choice = resolutions[i];
+        if (choice === 'mine')   writePathTo(merged, S, c.path);
+        else if (choice === 'both' && c.kind === 'text') {
+          // Concat two text values, separated by newline
+          const a = c.theirs.value || '';
+          const b = c.mine.value || '';
+          // Find the path in merged structure and set combined value
+          const combinedState = JSON.parse(JSON.stringify(remoteState));
+          writePathTo(combinedState, S, c.path);
+          // The mine-version was just written; we now overwrite with concat
+          setPathValue(merged, c.path, a ? (b ? `${a}\n${b}` : a) : b);
+        }
+        // 'theirs' → already in merged (since we start from remote)
+      });
+    }
+
+    // 6. Make sure activity log union is preserved (don't lose anyone's audit entries)
+    const baseActIds = new Set((_baseSnapshot?.activity || []).map(a => a.id));
+    const myNewAct = (S.activity || []).filter(a => !baseActIds.has(a.id));
+    const remoteNewAct = (remoteState.activity || []).filter(a => !baseActIds.has(a.id));
+    // Start with base activity, union both new activity sets, sort by ts desc
+    const baseAct = (_baseSnapshot?.activity || []);
+    const allActIds = new Set();
+    const merged_act = [];
+    [...myNewAct, ...remoteNewAct, ...baseAct].sort((a,b) => b.ts - a.ts).forEach(a => {
+      if (!allActIds.has(a.id)) { allActIds.add(a.id); merged_act.push(a); }
+    });
+    merged.activity = merged_act.slice(0, ACTIVITY_CAP);
+
+    // 7. Replace S with merged, push
+    S = merged;
+
+    // 8. Log the save before push so it appears in Gist
+    const n = _dirtyFields.size;
+    logActivity('saved', `${n} change${n!==1?'s':''}`);
+
+    setIndicator('busy', 'Saving…');
+    await pushGist();
+    try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
+
+    // 9. Reset baseline, re-render
+    takeBaseSnapshot();
+    renderAll();
+
+    const msg = conflicts.length > 0
+      ? `Saved ${n} change${n!==1?'s':''} (${conflicts.length} conflict${conflicts.length!==1?'s':''} resolved)`
+      : `Saved ${n} change${n!==1?'s':''}` + (remoteNewAct.length > 0 ? ` · merged with others' edits` : '');
+    toast(msg, 'ok');
+  } catch(e) {
+    console.error('Save failed:', e);
+    setIndicator('err', 'Save failed');
+    toast('Save failed — check console', 'err');
+  } finally {
+    _saveInFlight = false;
+    if (saveBtn) saveBtn.classList.remove('saving');
+  }
+}
+
+/* Helper: set a scalar/text value at a path inside a state */
+function setPathValue(state, path, value) {
+  let m;
+  m = path.match(/^trainee\/([^/]+)\/(w\d)\/(\d)\/(.+)$/);
+  if (m) {
+    const [, tid, wid, di, field] = m;
+    const t = state.trainees.find(x => x.id === tid);
+    if (!t || !t.weeks?.[wid]?.days?.[parseInt(di,10)]) return;
+    t.weeks[wid].days[parseInt(di,10)][field] = value;
+    return;
+  }
+  m = path.match(/^trainee\/([^/]+)\/(w\d)\/(test|weeklyComment|tlComment)$/);
+  if (m) {
+    const [, tid, wid, field] = m;
+    const t = state.trainees.find(x => x.id === tid);
+    if (!t || !t.weeks?.[wid]) return;
+    t.weeks[wid][field] = value;
+    return;
+  }
+  m = path.match(/^trainee\/([^/]+)\/(name|date|trainer|mentor|platform)$/);
+  if (m) {
+    const [, tid, field] = m;
+    const t = state.trainees.find(x => x.id === tid);
+    if (!t) return;
+    t[field] = value;
+  }
+}
+
+/* ── Reload flow ───────────────────────────────────── */
+
+async function reloadNow() {
+  if (!gistReady()) {
+    toast('Configure Gist sync first (gear icon)', 'warn');
+    return;
+  }
+  if (_dirtyFields.size > 0) {
+    const ok = await confirmModal(
+      `You have <strong>${_dirtyFields.size}</strong> unsaved change${_dirtyFields.size!==1?'s':''}. Reload will discard them.`,
+      { title: 'Discard unsaved changes?', confirmLabel: 'Discard & reload', confirmClass: 'btn-danger' }
+    );
+    if (!ok) return;
+  }
+  try {
+    await pullGist();
+    takeBaseSnapshot();
+    toast('Reloaded from team Gist', 'ok');
+  } catch (e) {
+    toast('Reload failed — check console', 'err');
+  }
+}
+
+/* ── Change preview modal (when ≥10 dirty fields) ──── */
+
+function showChangePreviewModal() {
+  return new Promise(resolve => {
+    const host = document.getElementById('modal-host');
+    let resolved = false;
+    const cleanup = () => {
+      host.innerHTML = '';
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', onKey);
+    };
+    const finish = (val) => { if (resolved) return; resolved = true; cleanup(); resolve(val); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') finish(false);
+      else if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    };
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+
+    // Group dirty paths by trainee/area
+    const groups = {};
+    _dirtyFields.forEach(path => {
+      const info = readPath(S, path);
+      const label = info.label || path;
+      // Extract group key: trainee name OR "Hub" OR "Other"
+      let groupKey = 'Other';
+      const m = path.match(/^trainee\/([^/]+)\//);
+      if (m) {
+        const t = S.trainees.find(x => x.id === m[1]) || S.archived?.find(x => x.id === m[1]);
+        groupKey = t?.name || 'Unnamed trainee';
+      } else if (path.startsWith('hub/')) {
+        groupKey = "Trainer's Hub";
+      } else if (path.startsWith('trainees/')) {
+        const m2 = path.match(/^trainees\/(?:__added\/)?([^/]+)/);
+        if (m2) {
+          const t = S.trainees.find(x => x.id === m2[1]) || S.archived?.find(x => x.id === m2[1]);
+          groupKey = (t?.name || 'Trainee') + ' (added/deleted/archived)';
+        }
+      }
+      groups[groupKey] = groups[groupKey] || [];
+      groups[groupKey].push(label.replace(/^[^·]+·\s*/, '')); // strip leading trainee-name prefix
+    });
+
+    const groupsHTML = Object.keys(groups).sort().map(g => `
+      <div class="prv-grp">
+        <div class="prv-grp-hd">${escapeHtml(g)} <span class="prv-cnt">${groups[g].length}</span></div>
+        <ul class="prv-list">
+          ${groups[g].slice(0, 8).map(it => `<li>${escapeHtml(it)}</li>`).join('')}
+          ${groups[g].length > 8 ? `<li class="prv-more">+ ${groups[g].length - 8} more</li>` : ''}
+        </ul>
+      </div>
+    `).join('');
+
+    host.innerHTML = `
+      <div class="mdl-back" id="mdl-back">
+        <div class="mdl-card mdl-large" role="dialog" aria-modal="true" onclick="event.stopPropagation()" style="max-width:560px;max-height:80vh;display:flex;flex-direction:column">
+          <div class="mdl-hd">
+            <div>
+              <div class="mdl-sub">${_dirtyFields.size} unsaved change${_dirtyFields.size!==1?'s':''}</div>
+              <div class="mdl-title">Confirm <em>save</em></div>
+            </div>
+            <button class="mdl-x" id="mdl-x">✕</button>
+          </div>
+          <div class="mdl-bd" style="overflow-y:auto">
+            <p style="margin-bottom:14px;font-size:13px;color:var(--muted)">You're about to push these changes to the team Gist. Review the list before continuing.</p>
+            <div class="prv-grps">${groupsHTML}</div>
+          </div>
+          <div class="mdl-ft">
+            <div style="flex:1"></div>
+            <button class="btn btn-ghost-dark" id="btn-cancel">Cancel</button>
+            <button class="btn btn-teal" id="btn-save">Save changes</button>
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('btn-save').addEventListener('click', () => finish(true));
+    document.getElementById('btn-cancel').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-x').addEventListener('click', () => finish(false));
+    document.getElementById('mdl-back').addEventListener('click', e => { if (e.target.id==='mdl-back') finish(false); });
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+/* ── Conflict resolution modal ─────────────────────── */
+
+function showConflictModal(conflicts) {
+  return new Promise(resolve => {
+    const host = document.getElementById('modal-host');
+    let resolved = false;
+    const choices = new Array(conflicts.length).fill(null);
+
+    const cleanup = () => {
+      host.innerHTML = '';
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', onKey);
+    };
+    const finish = (val) => { if (resolved) return; resolved = true; cleanup(); resolve(val); };
+    const onKey = (e) => { if (e.key === 'Escape') finish(null); };
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+
+    const renderConflicts = () => {
+      return conflicts.map((c, i) => {
+        const baseStr   = c.base.exists  ? (c.base.value   ?? '') : '(empty)';
+        const theirsStr = c.theirs.exists? (c.theirs.value ?? '') : '(empty)';
+        const mineStr   = c.mine.exists  ? (c.mine.value   ?? '') : '(empty)';
+        const isText = c.kind === 'text';
+        const choice = choices[i];
+        return `
+          <div class="cnf-row ${choice ? 'has-choice' : ''}" data-i="${i}">
+            <div class="cnf-label">${escapeHtml(c.label)}</div>
+            <div class="cnf-versions">
+              <div class="cnf-ver"><div class="cnf-ver-hd">Was</div><div class="cnf-ver-val">${escapeHtml(String(baseStr))}</div></div>
+              <div class="cnf-ver ${choice==='theirs'?'sel':''}" onclick="setConflictChoice(${i}, 'theirs')">
+                <div class="cnf-ver-hd">Theirs</div>
+                <div class="cnf-ver-val">${escapeHtml(String(theirsStr))}</div>
+              </div>
+              <div class="cnf-ver ${choice==='mine'?'sel':''}" onclick="setConflictChoice(${i}, 'mine')">
+                <div class="cnf-ver-hd">Mine</div>
+                <div class="cnf-ver-val">${escapeHtml(String(mineStr))}</div>
+              </div>
+              ${isText ? `
+                <div class="cnf-ver ${choice==='both'?'sel':''}" onclick="setConflictChoice(${i}, 'both')">
+                  <div class="cnf-ver-hd">Both</div>
+                  <div class="cnf-ver-val cnf-both">${escapeHtml(String(theirsStr))}<br><span style="opacity:.4">───</span><br>${escapeHtml(String(mineStr))}</div>
+                </div>
+              ` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    };
+
+    window.setConflictChoice = (i, choice) => {
+      choices[i] = choice;
+      // Update DOM (re-render is heavy if many conflicts, just update classes)
+      const row = host.querySelector(`.cnf-row[data-i="${i}"]`);
+      if (row) {
+        row.classList.add('has-choice');
+        row.querySelectorAll('.cnf-ver').forEach(v => v.classList.remove('sel'));
+        const target = row.querySelector(`.cnf-ver:nth-child(${choice==='theirs'?2:(choice==='mine'?3:4)})`);
+        if (target) target.classList.add('sel');
+      }
+      // Enable apply button if all conflicts have choices
+      const allChosen = choices.every(c => c !== null);
+      const applyBtn = document.getElementById('btn-apply');
+      if (applyBtn) applyBtn.disabled = !allChosen;
+    };
+
+    host.innerHTML = `
+      <div class="mdl-back" id="mdl-back">
+        <div class="mdl-card mdl-large" role="dialog" aria-modal="true" onclick="event.stopPropagation()" style="max-width:760px;max-height:85vh;display:flex;flex-direction:column">
+          <div class="mdl-hd">
+            <div>
+              <div class="mdl-sub">${conflicts.length} conflict${conflicts.length!==1?'s':''} detected</div>
+              <div class="mdl-title">Resolve <em>conflicts</em></div>
+            </div>
+            <button class="mdl-x" id="mdl-x">✕</button>
+          </div>
+          <div class="mdl-bd" style="overflow-y:auto;flex:1">
+            <p style="margin-bottom:14px;font-size:13px;color:var(--muted)">Both you and another editor changed the same cells since you opened the tool. Choose which version to keep for each.</p>
+            <div class="cnf-list">${renderConflicts()}</div>
+          </div>
+          <div class="mdl-ft">
+            <button class="btn btn-ghost-dark" id="btn-keep-all-mine">Keep all mine</button>
+            <button class="btn btn-ghost-dark" id="btn-keep-all-theirs">Keep all theirs</button>
+            <div style="flex:1"></div>
+            <button class="btn btn-ghost-dark" id="btn-cancel">Cancel</button>
+            <button class="btn btn-teal" id="btn-apply" disabled>Apply resolutions</button>
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('btn-cancel').addEventListener('click', () => finish(null));
+    document.getElementById('mdl-x').addEventListener('click', () => finish(null));
+    document.getElementById('btn-apply').addEventListener('click', () => finish(choices));
+    document.getElementById('btn-keep-all-mine').addEventListener('click', () => {
+      for (let i = 0; i < conflicts.length; i++) setConflictChoice(i, 'mine');
+    });
+    document.getElementById('btn-keep-all-theirs').addEventListener('click', () => {
+      for (let i = 0; i < conflicts.length; i++) setConflictChoice(i, 'theirs');
+    });
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+async function pushGist() {
+  if (!gistReady()) throw new Error('Gist not configured');
   setIndicator('busy', 'Saving…');
-  // Snapshot the body BEFORE the await to avoid pushing data that changes mid-flight
   const body = JSON.stringify({ files: { [window.GIST_FILE]: { content: JSON.stringify(S, null, 2) } } });
-  const wasPendingBefore = _gistPushPending;
-  _gistPushPending = false;
   try {
     const res = await fetch(`https://api.github.com/gists/${window.GIST_ID}`, {
       method: 'PATCH',
@@ -4109,19 +5074,24 @@ async function pushGist() {
   } catch(e) {
     setIndicator('err', 'Sync failed ✕');
     console.error('Gist push error:', e.message);
-    // Restore pending flag so beforeunload still flushes
-    _gistPushPending = wasPendingBefore;
-  } finally {
-    _gistPushInFlight = false;
+    throw e;
   }
 }
 
+/**
+ * Pull Gist state.
+ *  - returnOnly=true: return the loaded state WITHOUT modifying S (used by saveNow for three-way merge)
+ *  - returnOnly=false (default): replace S, run migrations, re-render. Caller is responsible for
+ *    taking a base snapshot afterwards if appropriate.
+ *  Returns the loaded state on success, or null on empty/invalid/error.
+ */
 let _pullInProgress = false;
-async function pullGist() {
-  if (!gistReady()) return;
-  if (_pullInProgress) return;
-  _pullInProgress = true;
-  setIndicator('busy', 'Loading…');
+async function pullGist(opts) {
+  opts = opts || {};
+  if (!gistReady()) return null;
+  if (_pullInProgress && !opts.returnOnly) return null;
+  if (!opts.returnOnly) _pullInProgress = true;
+  if (!opts.returnOnly) setIndicator('busy', 'Loading…');
   try {
     const res = await fetch(`https://api.github.com/gists/${window.GIST_ID}`, {
       headers: {
@@ -4142,62 +5112,40 @@ async function pullGist() {
       throw new Error(`File "${window.GIST_FILE}" not found in Gist. Available files: ${available || '(none)'}`);
     }
     if (!file.content || file.content.trim() === '{}' || file.content.trim() === '') {
-      setIndicator('ok', 'Gist empty — starting fresh');
-      return;
+      if (!opts.returnOnly) setIndicator('ok', 'Gist empty — starting fresh');
+      return null;
     }
     const loaded = JSON.parse(file.content);
     if (!loaded.trainees) {
-      setIndicator('ok', 'Gist invalid — starting fresh');
-      return;
+      if (!opts.returnOnly) setIndicator('ok', 'Gist invalid — starting fresh');
+      return null;
     }
-    // Don't clobber unpushed local edits — push them out first, skip the pull
-    if (_gistPushPending || _gistPushInFlight) {
-      console.log('Skipping pull: local has unpushed changes');
-      setIndicator('ok', 'Local changes preserved');
-      return;
+    if (opts.returnOnly) {
+      // Caller will run applyMigrations themselves if needed
+      return loaded;
     }
     S = loaded;
     applyMigrations(S);
     try { localStorage.setItem('tt3_state', JSON.stringify(S)); } catch(e){}
     setIndicator('ok', 'Loaded ✓ ' + new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'}));
     renderAll();
+    return loaded;
   } catch(e) {
-    setIndicator('err', 'Load failed ✕');
+    if (!opts.returnOnly) setIndicator('err', 'Load failed ✕');
     console.error('Gist pull error:', e.message);
-    console.error('Full error:', e);
+    throw e;
   } finally {
-    _pullInProgress = false;
+    if (!opts.returnOnly) _pullInProgress = false;
   }
 }
 
-let _gistTimer = null;
-let _gistPushPending = false;   // True between dirty() and successful pushGist
-let _gistPushInFlight = false;  // True while a pushGist fetch is awaiting
-
-function scheduleGistPush() {
-  if (!gistReady()) return;
-  _gistPushPending = true;
-  clearTimeout(_gistTimer);
-  _gistTimer = setTimeout(() => { pushGist(); }, 800);
-}
-
-// Flush any pending push synchronously before page unload (so data isn't lost on refresh)
+/* Warn before leaving the page if there are unsaved changes */
 window.addEventListener('beforeunload', (e) => {
-  if (!gistReady() || !_gistPushPending) return;
-  // Clear the debounce — we'll force-push now
-  clearTimeout(_gistTimer);
-  // Use sync XHR to ensure the request goes out before the page unloads
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('PATCH', `https://api.github.com/gists/${window.GIST_ID}`, false); // false = synchronous
-    xhr.setRequestHeader('Authorization', 'Bearer ' + window.GIST_TOKEN);
-    xhr.setRequestHeader('Accept', 'application/vnd.github+json');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(JSON.stringify({ files: { [window.GIST_FILE]: { content: JSON.stringify(S, null, 2) } } }));
-    _gistPushPending = false;
-  } catch(err) {
-    // If sync fails, at least localStorage has it
-    console.error('Beforeunload flush failed:', err);
+  if (dirtyCount() > 0) {
+    e.preventDefault();
+    // Modern browsers ignore the message but show their own dialog
+    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+    return e.returnValue;
   }
 });
 
@@ -4208,10 +5156,11 @@ renderAll();
 applyEditLockUI();
 
 if (gistReady()) {
-  // Auto-load from Gist on open (Gist is source of truth)
-  pullGist();
+  // Pull from Gist on open, then snapshot
+  pullGist().then(() => takeBaseSnapshot());
 } else {
   setIndicator('local', 'Local only');
+  takeBaseSnapshot();
 }
 </script>
 
