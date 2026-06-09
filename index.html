@@ -3481,37 +3481,49 @@ function applyDirtyMarkers() {
   document.querySelectorAll('.is-dirty').forEach(el => el.classList.remove('is-dirty'));
   if (_dirtyFields.size === 0) return;
   _dirtyFields.forEach(path => {
-    // trainee/<tid>/<wid>/<di>/<crit-or-note>
-    const m1 = path.match(/^trainee\/([^/]+)\/(w\d)\/(\d)\/(.+)$/);
-    if (m1) {
-      const [, tid, wid, di, field] = m1;
+    // trainee/<tid>/<wid>/<di>/note   → per-day note textarea
+    let m = path.match(/^trainee\/([^/]+)\/(w\d)\/(\d)\/note$/);
+    if (m) {
+      const [, tid, wid, di] = m;
       const tCur = active();
-      if (!tCur || tCur.id !== tid) return;
-      if (S.activeWeek !== wid) return;
-      const el = document.getElementById(`${tid}_${wid}_d${di}_${field}`);
+      if (!tCur || tCur.id !== tid || S.activeWeek !== wid) return;
+      const el = document.getElementById(`${tid}_${wid}_d${di}_note`);
       if (el) el.classList.add('is-dirty');
-      return;
-    }
-    // trainee/<tid>/<wid>/(test|weeklyComment|tlComment)
-    const m2 = path.match(/^trainee\/([^/]+)\/(w\d)\/(test|weeklyComment|tlComment)$/);
-    if (m2) {
-      const [, tid, wid, field] = m2;
-      const tCur = active();
-      if (!tCur || tCur.id !== tid) return;
-      if (S.activeWeek !== wid) return;
-      if (field === 'test') {
-        const el = document.getElementById(`${tid}_${wid}_wktest`);
-        if (el) el.classList.add('is-dirty');
-      } else {
-        const el = document.querySelector(`#panel-${wid} textarea[data-field="${field}"]`);
-        if (el) el.classList.add('is-dirty');
+      // Also mark the day's "+ Note" toggle button as a tiny hint
+      const wrap = document.getElementById(`${tid}_${wid}_d${di}_nw`);
+      if (wrap && !wrap.classList.contains('open')) {
+        // Expand so user can see the dirty note
+        wrap.classList.add('open');
       }
       return;
     }
+    // trainee/<tid>/<wid>/<di>/<crit>  → rating dropdown
+    m = path.match(/^trainee\/([^/]+)\/(w\d)\/(\d)\/(.+)$/);
+    if (m) {
+      const [, tid, wid, di, crit] = m;
+      const tCur = active();
+      if (!tCur || tCur.id !== tid || S.activeWeek !== wid) return;
+      const btn = document.getElementById(`rd_${tid}_${wid}_${di}_${crit}-btn`);
+      if (btn) btn.classList.add('is-dirty');
+      return;
+    }
+    // trainee/<tid>/<wid>/(test|weeklyComment|tlComment)
+    m = path.match(/^trainee\/([^/]+)\/(w\d)\/(test|weeklyComment|tlComment)$/);
+    if (m) {
+      const [, tid, wid, field] = m;
+      const tCur = active();
+      if (!tCur || tCur.id !== tid || S.activeWeek !== wid) return;
+      let el = null;
+      if (field === 'test')                el = document.getElementById(`${tid}_${wid}_wktest`);
+      else if (field === 'weeklyComment')  el = document.getElementById(`${tid}_${wid}_wc`);
+      else if (field === 'tlComment')      el = document.getElementById(`${tid}_${wid}_tlc`);
+      if (el) el.classList.add('is-dirty');
+      return;
+    }
     // trainee/<tid>/<setupField>
-    const m3 = path.match(/^trainee\/([^/]+)\/(name|date|trainer|mentor|platform)$/);
-    if (m3) {
-      const [, tid, field] = m3;
+    m = path.match(/^trainee\/([^/]+)\/(name|date|trainer|mentor|platform)$/);
+    if (m) {
+      const [, tid, field] = m;
       const tCur = active();
       if (!tCur || tCur.id !== tid) return;
       const el = document.getElementById(`f-${field}`);
