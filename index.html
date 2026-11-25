@@ -1931,7 +1931,7 @@ function newTrainee() {
 //   EDIT_HASH    → TrainThemGood  (full edit + archive + restore + delete)
 //   ARCHIVE_HASH → GoodToGo       (read-only archive viewing)
 const EDIT_HASH    = '38ab0bcde83eaf03655c8d316de98db4380f357eb1a3bf7e5a4f7d1de7f0236a';
-const ARCHIVE_HASH = '6255d55d5bf5d97bcb8f6f47bac3687c898ab56ca88c4366d060050979cd6da0';
+const ARCHIVE_HASH = 'f94896d257b728fbd99e46fd6f50bdef756c3fb0f78b0bbf4c255bd6200e466e';
 
 // Edit access persists for browser session only. Archive view persists per page load.
 let editUnlocked = (() => { try { return sessionStorage.getItem('tt3_edit') === '1'; } catch(e){ return false; } })();
